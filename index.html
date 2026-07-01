@@ -1531,11 +1531,15 @@
  await new Promise(r => setTimeout(r, 100));
  }
 
- // Download effettivo del file (Base64)
- if(fileDati && fileDati.startsWith('data:')) {
+ // Download effettivo tramite URL pubblico dello Storage
+ if(fileDati && !fileDati.startsWith('static/')) {
+ const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
+ const publicUrl = data.publicUrl;
+
  const link = document.createElement('a');
- link.href = fileDati;
+ link.href = publicUrl;
  link.download = nomeFile;
+ link.target = "_blank";
  document.body.appendChild(link);
  link.click();
  document.body.removeChild(link);
@@ -1567,16 +1571,6 @@
  const file = fileInput.files[0];
  const nome_file = file.name;
 
- // Funzione per leggere il file come Base64
- const readAsBase64 = (f) => new Promise((resolve, reject) => {
- const reader = new FileReader();
- reader.onload = () => resolve(reader.result);
- reader.onerror = reject;
- reader.readAsDataURL(f);
- });
-
- const file_dati = await readAsBase64(file);
-
  // UI Progress
  const progressContainer = document.getElementById('uploadProgressContainer');
  const progressBar = document.getElementById('uploadProgressBar');
@@ -1587,12 +1581,27 @@
  btnInvia.disabled = true;
  btnInvia.style.opacity = '0.5';
 
- // Simulazione caricamento con progresso (visto che non abbiamo il bucket configurato)
- for (let p = 0; p <= 100; p += 10) {
- progressBar.style.width = p + '%';
- progressText.textContent = "Caricamento: " + p + "%";
- await new Promise(r => setTimeout(r, 200));
+ // Step 1: Upload del file nello Storage
+ const nomeUnico = Date.now() + "_" + nome_file;
+ progressBar.style.width = '30%';
+ progressText.textContent = "Caricamento nello Storage...";
+
+ const { data: storageData, error: storageError } = await db
+ .storage
+ .from('archivio_pdf')
+ .upload(nomeUnico, file);
+
+ if (storageError) {
+ progressContainer.style.display = 'none';
+ btnInvia.disabled = false;
+ btnInvia.style.opacity = '1';
+ return alert("Errore nello Storage: " + storageError.message);
  }
+
+ const file_dati = storageData.path;
+
+ progressBar.style.width = '70%';
+ progressText.textContent = "Salvataggio nel Database...";
 
  const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file });
  if(error) return alert("Errore nel caricamento degli appunti.");
