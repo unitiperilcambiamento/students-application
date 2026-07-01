@@ -333,6 +333,53 @@
   right: calc(50% - 186px);
   }
  }
+
+ .note-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+ }
+ .note-icon {
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+ }
+ .note-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--accent-color);
+ }
+ .note-info {
+  flex-grow: 1;
+ }
+ .note-info h4 {
+  font-size: 15px;
+  color: #0f172a;
+  font-weight: 700;
+  margin-bottom: 2px;
+ }
+ .note-info p {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+ }
+ .note-info .note-meta {
+  font-size: 11px;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-top: 4px;
+ }
  </style>
 </head>
 <body>
@@ -741,10 +788,15 @@
  <!-- ================= VISTA 3: ARCHIVIO DRIVE CONDIVISO ================= -->
  <div id="view-archivio" class="app-view">
  <div class="view-title-banner">Archivio Materiali & Appunti</div>
- <div class="section-container">
+
+ <div class="search-filter-wrapper" style="margin-top: 10px;">
+ <input type="text" id="archiveSearch" class="filter-input" placeholder=" Cerca materia, argomento o docente..." oninput="filterArchive()">
+ </div>
+
+ <div class="section-container" id="archiveContainer">
  <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti della Lista 2.</p>
 
- <div class="archive-folder-row">
+ <div class="archive-folder-row archive-item-static">
  <div class="folder-left-side">
  <div class="folder-icon-plate">
  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
@@ -757,7 +809,7 @@
  <span class="download-arrow">➔</span>
  </div>
 
- <div class="archive-folder-row">
+ <div class="archive-folder-row archive-item-static">
  <div class="folder-left-side">
  <div class="folder-icon-plate">
  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
@@ -769,7 +821,10 @@
  </div>
  <span class="download-arrow">➔</span>
  </div>
+
+ <div id="archiveDynamicList"></div>
  </div>
+ <button class="floating-add-btn" onclick="navigateTo('view-carica-appunti', null, 'CARICA APPUNTI')">+</button>
  </div>
 
 
@@ -806,6 +861,28 @@
  <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)">
  <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea>
  <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: CARICA APPUNTI ================= -->
+ <div id="view-carica-appunti" class="app-view">
+ <div class="view-title-banner">
+ <span>Carica i tuoi Appunti</span>
+ <span class="back-link" onclick="navigateTo('view-archivio', null, 'ARCHIVIO CONDIVISO')">&#8592; Annulla</span>
+ </div>
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Condividi i tuoi appunti con gli altri studenti. Compila i campi e seleziona il file.</p>
+ <input type="text" id="appuntiMateria" class="filter-input" placeholder="Materia (es. Matematica)">
+ <input type="text" id="appuntiArgomento" class="filter-input" placeholder="Argomento (es. Derivate)">
+ <input type="text" id="appuntiDocente" class="filter-input" placeholder="Docente">
+ <textarea id="appuntiNote" class="filter-input" style="height: 80px; resize: none;" placeholder="Eventuali note..."></textarea>
+
+ <div style="background: white; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('appuntiFile').click()">
+ <span style="font-size: 13px; color: #64748b;" id="fileNameDisplay">Seleziona un file (PDF, Immagine...)</span>
+ <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)">
+ </div>
+
+ <button onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button>
  </div>
  </div>
 
@@ -897,6 +974,9 @@
 
  if(viewId === 'view-calendario') {
  renderCalendar();
+ }
+ if(viewId === 'view-archivio') {
+ if(typeof window.caricaArchivioAppunti === 'function') window.caricaArchivioAppunti();
  }
  }
 
@@ -1346,6 +1426,110 @@
  navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE');
  };
 
+ window.updateFileNameDisplay = function(input) {
+ const display = document.getElementById('fileNameDisplay');
+ if(input.files && input.files[0]) {
+ display.textContent = "File selezionato: " + input.files[0].name;
+ display.style.color = "var(--accent-color)";
+ display.style.fontWeight = "bold";
+ } else {
+ display.textContent = "Seleziona un file (PDF, Immagine...)";
+ display.style.color = "#64748b";
+ display.style.fontWeight = "normal";
+ }
+ };
+
+ window.inviaAppunti = async function() {
+ if(!db) return alert('Connessione a Supabase non disponibile.');
+ const materia = document.getElementById('appuntiMateria').value.trim();
+ const argomento = document.getElementById('appuntiArgomento').value.trim();
+ const docente = document.getElementById('appuntiDocente').value.trim();
+ const note = document.getElementById('appuntiNote').value.trim();
+ const fileInput = document.getElementById('appuntiFile');
+
+ if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!');
+
+ let file_url = "";
+ if(fileInput.files && fileInput.files[0]) {
+ // In una implementazione reale qui caricheresti il file su Supabase Storage
+ // Per ora simuliamo un URL o salviamo il nome
+ file_url = "uploads/" + fileInput.files[0].name;
+ }
+
+ const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_url });
+ if(error) return alert("Errore nel caricamento degli appunti.");
+
+ alert('Appunti caricati con successo!');
+ // Reset campi
+ document.getElementById('appuntiMateria').value = '';
+ document.getElementById('appuntiArgomento').value = '';
+ document.getElementById('appuntiDocente').value = '';
+ document.getElementById('appuntiNote').value = '';
+ fileInput.value = '';
+ document.getElementById('fileNameDisplay').textContent = "Seleziona un file (PDF, Immagine...)";
+
+ await window.caricaArchivioAppunti();
+ navigateTo('view-archivio', null, 'ARCHIVIO CONDIVISO');
+ };
+
+ function creaCardAppunto(appunto) {
+ const card = document.createElement('div');
+ card.className = 'note-card archive-item-dynamic';
+ card.setAttribute('data-materia', (appunto.materia || '').toLowerCase());
+ card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase());
+ card.setAttribute('data-docente', (appunto.docente || '').toLowerCase());
+
+ card.innerHTML = `
+ <div class="note-icon">
+ <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+ </div>
+ <div class="note-info">
+ <h4>${appunto.materia}</h4>
+ <p><strong>${appunto.argomento}</strong><br>Prof. ${appunto.docente}</p>
+ ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${appunto.note}</p>` : ''}
+ <div class="note-meta">Caricato da uno studente</div>
+ </div>
+ <span class="download-arrow" style="cursor:pointer;" onclick="alert('Download in corso...')">➔</span>
+ `;
+ return card;
+ }
+
+ window.caricaArchivioAppunti = async function() {
+ if(!db) return;
+ const { data, error } = await db.from('archivio_appunti').select('*').order('creato_il', { ascending: false });
+ if(error) return;
+ const dynamicList = document.getElementById('archiveDynamicList');
+ if(dynamicList) {
+ dynamicList.innerHTML = '';
+ (data || []).forEach(appunto => {
+ dynamicList.appendChild(creaCardAppunto(appunto));
+ });
+ }
+ if(typeof window.filterArchive === 'function') window.filterArchive();
+ };
+
+ window.filterArchive = function() {
+ const query = (document.getElementById('archiveSearch')?.value || '').toLowerCase();
+
+ // Filtra elementi statici
+ document.querySelectorAll('.archive-item-static').forEach(item => {
+ const text = item.innerText.toLowerCase();
+ item.style.display = text.includes(query) ? 'flex' : 'none';
+ });
+
+ // Filtra elementi dinamici
+ document.querySelectorAll('.archive-item-dynamic').forEach(item => {
+ const materia = item.getAttribute('data-materia') || '';
+ const argomento = item.getAttribute('data-argomento') || '';
+ const docente = item.getAttribute('data-docente') || '';
+ if(materia.includes(query) || argomento.includes(query) || docente.includes(query)) {
+ item.style.display = 'flex';
+ } else {
+ item.style.display = 'none';
+ }
+ });
+ };
+
  window.filterMarketplace = function() {
  const searchInput = document.getElementById('marketSearch');
  const priceInput = document.getElementById('marketPriceMax');
@@ -1365,13 +1549,14 @@
  db.channel('lista2-realtime')
  .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, payload => {
  if(payload.new) updateLikeCount(payload.new.post_id, payload.new.likes_count);
  })
  .subscribe();
  }
 
- Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace()]).then(attivaRealtime);
+ Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti()]).then(attivaRealtime);
  })();
  </script>
 
