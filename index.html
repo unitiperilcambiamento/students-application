@@ -5,7 +5,6 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
  <title>App Lista 2</title> 
   
- <!-- Tag per l'effetto App Nativa (PWA) --> 
  <link rel="manifest" href="manifest.json"> 
  <meta name="apple-mobile-web-app-capable" content="yes"> 
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
@@ -308,13 +307,138 @@
  
  
  @keyframes smoothFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } 
+ 
+ .floating-add-btn { 
+  position: fixed; 
+  bottom: 105px; 
+  right: 20px; 
+  background: #000; 
+  color: #fff; 
+  border: none; 
+  border-radius: 12px; 
+  width: 50px; 
+  height: 50px; 
+  font-size: 30px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  cursor: pointer; 
+  z-index: 1000; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+ } 
+ 
+ @media (min-width: 412px) { 
+  .floating-add-btn { 
+  right: calc(50% - 186px); 
+  } 
+ } 
+
+ .note-card { 
+  background: white; 
+  border-radius: 18px; 
+  padding: 16px; 
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  margin-bottom: 12px; 
+ } 
+ .note-icon { 
+  width: 48px; 
+  height: 48px; 
+  background: #f1f5f9; 
+  border-radius: 12px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-shrink: 0; 
+ } 
+ .note-icon svg { 
+  width: 24px; 
+  height: 24px; 
+  fill: var(--accent-color); 
+ } 
+ .note-info { 
+  flex-grow: 1; 
+ } 
+ .note-info h4 { 
+  font-size: 15px; 
+  color: #0f172a; 
+  font-weight: 700; 
+  margin-bottom: 2px; 
+ } 
+ .note-info p { 
+  font-size: 12px; 
+  color: #64748b; 
+  line-height: 1.4; 
+ } 
+ .note-info .note-meta { 
+  font-size: 11px; 
+  color: var(--accent-color); 
+  font-weight: 700; 
+  margin-top: 4px; 
+ } 
+
+ .progress-container { 
+  display: none; 
+  width: 100%; 
+  height: 8px; 
+  background-color: #e2e8f0; 
+  border-radius: 999px; 
+  overflow: hidden; 
+  margin-top: 10px; 
+ } 
+ .progress-bar { 
+  width: 0%; 
+  height: 100%; 
+  background-color: var(--accent-color); 
+  transition: width 0.3s ease; 
+ } 
+ .progress-text { 
+  font-size: 11px; 
+  color: #64748b; 
+  text-align: center; 
+  margin-top: 4px; 
+ } 
+
+ /* MODALE DOWNLOAD */ 
+ .download-modal { 
+  display: none; 
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  background: rgba(15, 23, 42, 0.7); 
+  z-index: 2000; 
+  justify-content: center; 
+  align-items: center; 
+  backdrop-filter: blur(4px); 
+ } 
+ .download-modal-content { 
+  background: #ffffff; 
+  width: 90%; 
+  max-width: 320px; 
+  padding: 24px; 
+  border-radius: 24px; 
+  text-align: center; 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+ } 
+ .download-modal-content h3 { 
+  font-size: 16px; 
+  color: #0f172a; 
+  margin-bottom: 8px; 
+ } 
+ .download-modal-content p { 
+  font-size: 13px; 
+  color: #64748b; 
+  margin-bottom: 20px; 
+ } 
  </style> 
 </head> 
 <body> 
  
  <div class="app-container"> 
  
- <!-- HEADER GLOBALE --> 
  <header class="app-header"> 
  <div class="logos-container"> 
  <img src="lista.png" alt="Logo Lista 2" class="header-logo-free"> 
@@ -325,10 +449,8 @@
  </header> 
  
  
- <!-- ================= VISTA 1: HOME ================= --> 
  <div id="view-home" class="app-view active"> 
   
- <!-- NOTIZIE IN EVIDENZA --> 
  <section class="news-slider-section"> 
  <div class="news-slider" id="newsSlider"> 
  <div class="news-slide active"> 
@@ -348,7 +470,6 @@
  <button class="slider-arrow next" onclick="moveSlide(1)">&#10095;</button> 
  </section> 
  
- <!-- POST DEI RAPPRESENTANTI (Senza vedi tutto) --> 
  <section class="section-container"> 
  <h2 class="section-title-margin">Post dei Rappresentanti</h2> 
  <div class="posts-scroll-container"> 
@@ -391,7 +512,6 @@
  </div> 
  </section> 
  
- <!-- COLLABORAZIONI (Senza vedi tutto, con 4 nuovi contratti bloccati e testo "Presto disponibile...") --> 
  <section class="section-container"> 
  <div class="section-header-inline"> 
  <h2 class="section-title">Collaborazioni</h2> 
@@ -406,7 +526,6 @@
  <p>Rinnovata la collaborazione: qualsiasi menu a 9.99 euro esibendo l'applicazione!</p> 
  </div> 
  </div> 
- <!-- Nuovi partner in suspense con testo "Presto disponibile..." --> 
  <div class="collab-card suspense"> 
  <div class="collab-img-container"> 
  <div class="suspense-placeholder"> 
@@ -454,7 +573,6 @@
  </div> 
  </section> 
  
- <!-- DOMANDE ANONIME --> 
  <section class="section-container"> 
  <div class="section-header-inline"> 
  <h2 class="section-title">Domande Anonime</h2> 
@@ -484,7 +602,6 @@
  </div> 
  </section> 
  
- <!-- MARKETPLACE & RIPETIZIONI --> 
  <section class="section-container"> 
  <div class="section-header-inline"> 
  <h2 class="section-title">Marketplace & Ripetizioni</h2> 
@@ -526,7 +643,6 @@
  </div> 
  
  
- <!-- ================= VISTA: VEDI TUTTO DOMANDE ================= --> 
  <div id="view-all-questions" class="app-view"> 
  <div class="view-title-banner"> 
  <span>Tutte le Domande</span> 
@@ -555,20 +671,17 @@
  </div> 
  
  
- <!-- ================= VISTA: VEDI TUTTO MARKETPLACE (CON RICERCA E PREZZO) ================= --> 
  <div id="view-all-market" class="app-view"> 
  <div class="view-title-banner"> 
  <span>Tutti gli Annunci</span> 
  <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">← Home</span> 
  </div> 
   
- <!-- Barra dei Filtri Interattivi --> 
  <div class="search-filter-wrapper"> 
  <input type="text" id="marketSearch" class="filter-input" placeholder=" Cerca parola chiave o autore..." oninput="filterMarketplace()"> 
  <input type="number" id="marketPriceMax" class="filter-input" placeholder=" Prezzo massimo (€)..." oninput="filterMarketplace()"> 
  </div> 
  
- <!-- Griglia Prodotti Filtrabili --> 
  <div class="market-grid-container" id="gridMarketplace"> 
   
  <div class="market-card-scroll market-card-grid" data-title="Le basi della fisica" data-author="Francesco Cerri" data-price="35"> 
@@ -621,7 +734,6 @@
  
  
  
- <!-- ================= VISTA: CREA DOMANDA ================= --> 
  <div id="view-add-question" class="app-view"> 
  <div class="view-title-banner"> 
  <span>Fai una Domanda</span> 
@@ -647,7 +759,6 @@
  </div> 
  </div> 
  
- <!-- ================= VISTA: CREA ANNUNCIO ================= --> 
  <div id="view-add-market" class="app-view"> 
  <div class="view-title-banner"> 
  <span>Nuovo Annuncio</span> 
@@ -665,7 +776,6 @@
  </div> 
  </div> 
  
- <!-- ================= VISTA 2: OBIETTIVI (PROGRAMMA) ================= --> 
  <div id="view-obiettivi" class="app-view"> 
  <div class="view-title-banner">Programma Elettorale e Candidati</div> 
  <div class="section-container"> 
@@ -713,13 +823,17 @@
  </div> 
  
  
- <!-- ================= VISTA 3: ARCHIVIO DRIVE CONDIVISO ================= --> 
  <div id="view-archivio" class="app-view"> 
  <div class="view-title-banner">Archivio Materiali & Appunti</div> 
- <div class="section-container"> 
+ 
+ <div class="search-filter-wrapper" style="margin-top: 10px;"> 
+ <input type="text" id="archiveSearch" class="filter-input" placeholder=" Cerca materia, argomento o docente..." oninput="filterArchive()"> 
+ </div> 
+ 
+ <div class="section-container" id="archiveContainer"> 
  <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti della Lista 2.</p> 
   
- <div class="archive-folder-row"> 
+ <div class="archive-folder-row archive-item-static"> 
  <div class="folder-left-side"> 
  <div class="folder-icon-plate"> 
  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
@@ -729,10 +843,10 @@
  <p>24 File • Formulari e Derivate</p> 
  </div> 
  </div> 
- <span class="download-arrow">➔</span> 
+ <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('static/mate_fisica.zip', 'Matematica e Fisica')">➔</span> 
  </div> 
  
- <div class="archive-folder-row"> 
+ <div class="archive-folder-row archive-item-static"> 
  <div class="folder-left-side"> 
  <div class="folder-icon-plate"> 
  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
@@ -742,13 +856,15 @@
  <p>15 File • Schemi Divina Commedia</p> 
  </div> 
  </div> 
- <span class="download-arrow">➔</span> 
+ <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('static/umanistica.pdf', 'Umanistica & Temi')">➔</span> 
  </div> 
+ 
+ <div id="archiveDynamicList"></div> 
  </div> 
+ <button class="floating-add-btn" onclick="navigateTo('view-carica-appunti', null, 'CARICA APPUNTI')">+</button> 
  </div> 
  
  
- <!-- ================= VISTA 4: CALENDARIO ASSEMBLEE ================= --> 
  <div id="view-calendario" class="app-view"> 
  <div class="view-title-banner">Calendario Assemblee</div> 
  <section class="section-container main-calendar-wrapper"> 
@@ -767,10 +883,49 @@
  </div> 
  <div class="calendar-list" id="calendarEventList"></div> 
  </section> 
+ <button class="floating-add-btn" onclick="navigateTo('view-proponi-assemblea', null, 'PROPONI ASSEMBLEA')">+</button> 
+ </div> 
+
+ <div id="view-proponi-assemblea" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Proponi un'Assemblea</span> 
+ <span class="back-link" onclick="navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Inviaci la tua proposta per una nuova assemblea. Specifica il titolo e cosa vorresti fare.</p> 
+ <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)"> 
+ <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea> 
+ <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button> 
+ </div> 
+ </div> 
+
+ <div id="view-carica-appunti" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Carica i tuoi Appunti</span> 
+ <span class="back-link" onclick="navigateTo('view-archivio', null, 'ARCHIVIO CONDIVISO')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Condividi i tuoi appunti con gli altri studenti. Compila i campi e seleziona il file.</p> 
+ <input type="text" id="appuntiMateria" class="filter-input" placeholder="Materia (es. Matematica)"> 
+ <input type="text" id="appuntiArgomento" class="filter-input" placeholder="Argomento (es. Derivate)"> 
+ <input type="text" id="appuntiDocente" class="filter-input" placeholder="Docente"> 
+ <textarea id="appuntiNote" class="filter-input" style="height: 80px; resize: none;" placeholder="Eventuali note..."></textarea> 
+  
+ <div style="background: white; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('appuntiFile').click()"> 
+ <span style="font-size: 13px; color: #64748b;" id="fileNameDisplay">Seleziona un file (PDF, Immagine...)</span> 
+ <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)"> 
+ </div> 
+
+ <div id="uploadProgressContainer" class="progress-container"> 
+ <div id="uploadProgressBar" class="progress-bar"></div> 
+ <p id="uploadProgressText" class="progress-text">Caricamento: 0%</p> 
+ </div> 
+  
+ <button id="btnInviaAppunti" onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button> 
+ </div> 
  </div> 
  
  
- <!-- ================= VISTA 5: IMPOSTAZIONI CAMBIO COLORE ================= --> 
  <div id="view-settings" class="app-view"> 
  <div class="view-title-banner">Cambia il Colore dell'App</div> 
  <section class="section-container"> 
@@ -798,8 +953,18 @@
  </section> 
  </div> 
  
+ <div id="downloadModal" class="download-modal"> 
+ <div class="download-modal-content"> 
+ <h3 id="downloadFileName">File.pdf</h3> 
+ <p>Preparazione del download...</p> 
+ <div class="progress-container" style="display: block;"> 
+ <div id="downloadProgressBar" class="progress-bar"></div> 
+ </div> 
+ <p id="downloadProgressText" class="progress-text" style="margin-top: 8px;">0%</p> 
+ </div> 
+ </div> 
  
- <!-- NAVBAR FLUTTUANTE IN BASSO --> 
+ 
  <nav class="bottom-nav"> 
  <button class="nav-item active" onclick="navigateTo('view-home', this, 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')"> 
  <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> 
@@ -821,7 +986,6 @@
  </div> 
  
  
- <!-- SCRIPT LOGICI DI FUNZIONAMENTO --> 
  <script> 
  // 1. AUTO SCROLL NOTIZIE 
  let currentSlide = 0; 
@@ -857,6 +1021,9 @@
  
  if(viewId === 'view-calendario') { 
  renderCalendar(); 
+ } 
+ if(viewId === 'view-archivio') { 
+ if(typeof window.caricaArchivioAppunti === 'function') window.caricaArchivioAppunti(); 
  } 
  } 
  
@@ -1293,6 +1460,209 @@
  navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2'); 
  }; 
  
+ window.inviaPropostaAssemblea = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const titolo = document.getElementById('propostaTitolo').value.trim(); 
+ const descrizione = document.getElementById('propostaDescrizione').value.trim(); 
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!'); 
+ const { error } = await db.from('proposte_assemblee').insert({ titolo, descrizione }); 
+ if(error) return alert("Errore nell'invio della proposta."); 
+ alert('Proposta inviata con successo!'); 
+ document.getElementById('propostaTitolo').value = ''; 
+ document.getElementById('propostaDescrizione').value = ''; 
+ navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE'); 
+ }; 
+ 
+ window.updateFileNameDisplay = function(input) { 
+ const display = document.getElementById('fileNameDisplay'); 
+ if(input.files && input.files[0]) { 
+ display.textContent = "File selezionato: " + input.files[0].name; 
+ display.style.color = "var(--accent-color)"; 
+ display.style.fontWeight = "bold"; 
+ } else { 
+ display.textContent = "Seleziona un file (PDF, Immagine...)"; 
+ display.style.color = "#64748b"; 
+ display.style.fontWeight = "normal"; 
+ } 
+ }; 
+ 
+ window.downloadFile = async function(fileDati, nomeFile) { 
+ if(!db) return; 
+  
+ const modal = document.getElementById('downloadModal'); 
+ const fileNameText = document.getElementById('downloadFileName'); 
+ const progressBar = document.getElementById('downloadProgressBar'); 
+ const progressText = document.getElementById('downloadProgressText'); 
+  
+ fileNameText.textContent = nomeFile; 
+ modal.style.display = 'flex'; 
+ progressBar.style.width = '0%'; 
+ progressText.textContent = '0%'; 
+  
+ try { 
+ // Simulazione caricamento con progresso per il download 
+ for (let p = 0; p <= 100; p += 5) { 
+ progressBar.style.width = p + '%'; 
+ progressText.textContent = p + "%"; 
+ await new Promise(r => setTimeout(r, 100)); 
+ } 
+  
+ // Download effettivo tramite URL pubblico dello Storage 
+ if(fileDati && !fileDati.startsWith('static/')) { 
+ const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati); 
+ const publicUrl = data.publicUrl; 
+  
+ // Metodo window.location.href per aggirare i blocchi popup di Safari/Chrome su mobile 
+ window.location.href = publicUrl; 
+ } else { 
+ alert("Download del file statico: " + nomeFile); 
+ } 
+  
+ setTimeout(() => { 
+ modal.style.display = 'none'; 
+ }, 500); 
+  
+ } catch (err) { 
+ modal.style.display = 'none'; 
+ alert("Errore durante il download."); 
+ } 
+ }; 
+ 
+ window.inviaAppunti = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const materia = document.getElementById('appuntiMateria').value.trim(); 
+ const argomento = document.getElementById('appuntiArgomento').value.trim(); 
+ const docente = document.getElementById('appuntiDocente').value.trim(); 
+ const note = document.getElementById('appuntiNote').value.trim(); 
+ const fileInput = document.getElementById('appuntiFile'); 
+  
+ if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!'); 
+ if(!fileInput.files || !fileInput.files[0]) return alert('Seleziona un file da caricare!'); 
+  
+ const file = fileInput.files[0]; 
+ const nome_file = file.name; 
+  
+ // UI Progress 
+ const progressContainer = document.getElementById('uploadProgressContainer'); 
+ const progressBar = document.getElementById('uploadProgressBar'); 
+ const progressText = document.getElementById('uploadProgressText'); 
+ const btnInvia = document.getElementById('btnInviaAppunti'); 
+  
+ progressContainer.style.display = 'block'; 
+ btnInvia.disabled = true; 
+ btnInvia.style.opacity = '0.5'; 
+  
+ // Step 1: Upload del file nello Storage 
+ const nomeUnico = Date.now() + "_" + nome_file; 
+ progressBar.style.width = '30%'; 
+ progressText.textContent = "Caricamento nello Storage..."; 
+  
+ const { data: storageData, error: storageError } = await db 
+ .storage 
+ .from('archivio_pdf') 
+ .upload(nomeUnico, file); 
+  
+ if (storageError) { 
+ progressContainer.style.display = 'none'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+ return alert("Errore nello Storage: " + storageError.message); 
+ } 
+  
+ const file_dati = storageData.path; 
+  
+ progressBar.style.width = '70%'; 
+ progressText.textContent = "Salvataggio nel Database..."; 
+  
+ const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file }); 
+ if(error) return alert("Errore nel caricamento degli appunti."); 
+  
+ alert('Appunti caricati con successo!'); 
+ // Reset UI 
+ progressContainer.style.display = 'none'; 
+ progressBar.style.width = '0%'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+  
+ // Reset campi 
+ document.getElementById('appuntiMateria').value = ''; 
+ document.getElementById('appuntiArgomento').value = ''; 
+ document.getElementById('appuntiDocente').value = ''; 
+ document.getElementById('appuntiNote').value = ''; 
+ fileInput.value = ''; 
+ document.getElementById('fileNameDisplay').textContent = "Seleziona un file (PDF, Immagine...)"; 
+  
+ await window.caricaArchivioAppunti(); 
+ navigateTo('view-archivio', null, 'ARCHIVIO CONDIVISO'); 
+ }; 
+ 
+ function escapeHTML(str) { 
+ if(!str) return ""; 
+ return str.replace(/[&<>"']/g, function(m) { 
+ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; 
+ }); 
+ } 
+ 
+ function creaCardAppunto(appunto) { 
+ const card = document.createElement('div'); 
+ card.className = 'note-card archive-item-dynamic'; 
+ card.setAttribute('data-materia', (appunto.materia || '').toLowerCase()); 
+ card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase()); 
+ card.setAttribute('data-docente', (appunto.docente || '').toLowerCase()); 
+  
+ card.innerHTML = ` 
+ <div class="note-icon"> 
+ <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> 
+ </div> 
+ <div class="note-info"> 
+ <h4>${escapeHTML(appunto.materia)}</h4> 
+ <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p> 
+ ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''} 
+ <div class="note-meta">Caricato da uno studente</div> 
+ </div> 
+ <span class="download-arrow" style="cursor:pointer;">➔</span> 
+ `; 
+  
+ card.querySelector('.download-arrow').onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file); 
+ return card; 
+ } 
+ 
+ window.caricaArchivioAppunti = async function() { 
+ if(!db) return; 
+ const { data, error } = await db.from('archivio_appunti').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+ const dynamicList = document.getElementById('archiveDynamicList'); 
+ if(dynamicList) { 
+ dynamicList.innerHTML = ''; 
+ (data || []).forEach(appunto => { 
+ dynamicList.appendChild(creaCardAppunto(appunto)); 
+ }); 
+ } 
+ if(typeof window.filterArchive === 'function') window.filterArchive(); 
+ }; 
+ 
+ window.filterArchive = function() { 
+ const query = (document.getElementById('archiveSearch')?.value || '').toLowerCase(); 
+  
+ // Filtra elementi statici 
+ document.querySelectorAll('.archive-item-static').forEach(item => { 
+ const text = item.innerText.toLowerCase(); 
+ item.style.display = text.includes(query) ? 'flex' : 'none'; 
+ }); 
+  
+ // Filtra elementi dinamici 
+ document.querySelectorAll('.archive-item-dynamic').forEach(item => { 
+ const materia = item.getAttribute('data-materia') || ''; 
+ const argomento = item.getAttribute('data-argomento') || ''; 
+ const docente = item.getAttribute('data-docente') || ''; 
+ if(materia.includes(query) || argomento.includes(query) || docente.includes(query)) { 
+ item.style.display = 'flex'; 
+ } else { 
+ item.style.display = 'none'; 
+ } 
+ }); 
+ }; 
+ 
  window.filterMarketplace = function() { 
  const searchInput = document.getElementById('marketSearch'); 
  const priceInput = document.getElementById('marketPriceMax'); 
@@ -1312,13 +1682,14 @@
  db.channel('lista2-realtime') 
  .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande()) 
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace()) 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti()) 
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, payload => { 
  if(payload.new) updateLikeCount(payload.new.post_id, payload.new.likes_count); 
  }) 
  .subscribe(); 
  } 
  
- Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace()]).then(attivaRealtime); 
+ Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti()]).then(attivaRealtime); 
  })(); 
  </script> 
  
