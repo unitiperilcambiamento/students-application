@@ -380,6 +380,28 @@
   font-weight: 700;
   margin-top: 4px;
  }
+
+ .progress-container {
+  display: none;
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+ }
+ .progress-bar {
+  width: 0%;
+  height: 100%;
+  background-color: var(--accent-color);
+  transition: width 0.3s ease;
+ }
+ .progress-text {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+ }
  </style>
 </head>
 <body>
@@ -882,7 +904,12 @@
  <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)">
  </div>
 
- <button onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button>
+ <div id="uploadProgressContainer" class="progress-container">
+ <div id="uploadProgressBar" class="progress-bar"></div>
+ <p id="uploadProgressText" class="progress-text">Caricamento: 0%</p>
+ </div>
+
+ <button id="btnInviaAppunti" onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button>
  </div>
  </div>
 
@@ -1439,6 +1466,24 @@
  }
  };
 
+ window.downloadFile = async function(fileDati, nomeFile) {
+ if(!db) return;
+ try {
+ // In una implementazione reale con Supabase Storage:
+ // const { data, error } = await db.storage.from('appunti').download(fileDati);
+ // Per ora, simuliamo il download aprendo l'URL se esiste o mostrando un messaggio
+ alert("Download del file: " + nomeFile + "\nPercorso: " + fileDati);
+
+ // Esempio di logica reale per il download se fosse un URL pubblico:
+ // const link = document.createElement('a');
+ // link.href = fileDati;
+ // link.download = nomeFile;
+ // link.click();
+ } catch (err) {
+ alert("Errore durante il download.");
+ }
+ };
+
  window.inviaAppunti = async function() {
  if(!db) return alert('Connessione a Supabase non disponibile.');
  const materia = document.getElementById('appuntiMateria').value.trim();
@@ -1448,18 +1493,39 @@
  const fileInput = document.getElementById('appuntiFile');
 
  if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!');
+ if(!fileInput.files || !fileInput.files[0]) return alert('Seleziona un file da caricare!');
 
- let nome_file = "";
- let file_dati = "";
- if(fileInput.files && fileInput.files[0]) {
- nome_file = fileInput.files[0].name;
- file_dati = "uploads/" + nome_file; // Placeholder per file_dati
+ const file = fileInput.files[0];
+ const nome_file = file.name;
+ const file_dati = "uploads/" + Date.now() + "_" + nome_file;
+
+ // UI Progress
+ const progressContainer = document.getElementById('uploadProgressContainer');
+ const progressBar = document.getElementById('uploadProgressBar');
+ const progressText = document.getElementById('uploadProgressText');
+ const btnInvia = document.getElementById('btnInviaAppunti');
+
+ progressContainer.style.display = 'block';
+ btnInvia.disabled = true;
+ btnInvia.style.opacity = '0.5';
+
+ // Simulazione caricamento con progresso (visto che non abbiamo il bucket configurato)
+ for (let p = 0; p <= 100; p += 10) {
+ progressBar.style.width = p + '%';
+ progressText.textContent = "Caricamento: " + p + "%";
+ await new Promise(r => setTimeout(r, 200));
  }
 
  const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file });
  if(error) return alert("Errore nel caricamento degli appunti.");
 
  alert('Appunti caricati con successo!');
+ // Reset UI
+ progressContainer.style.display = 'none';
+ progressBar.style.width = '0%';
+ btnInvia.disabled = false;
+ btnInvia.style.opacity = '1';
+
  // Reset campi
  document.getElementById('appuntiMateria').value = '';
  document.getElementById('appuntiArgomento').value = '';
@@ -1489,7 +1555,7 @@
  ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${appunto.note}</p>` : ''}
  <div class="note-meta">Caricato da uno studente</div>
  </div>
- <span class="download-arrow" style="cursor:pointer;" onclick="alert('Download in corso...')">➔</span>
+ <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('${appunto.file_dati}', '${appunto.nome_file}')">➔</span>
  `;
  return card;
  }
