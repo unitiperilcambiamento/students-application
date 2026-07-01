@@ -1,0 +1,21 @@
+{
+  "name": "App Studenti - Istituto Manzoni",
+  "short_name": "Studapp",
+  "description": "App per gli studenti dell'Istituto Manzoni.",
+  "start_url": "/App-Studenti-/app.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "/App-Studenti-/logo123.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/App-Studenti-/logo123.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

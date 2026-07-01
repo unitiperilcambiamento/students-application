@@ -1,0 +1,1144 @@
+  <!DOCTYPE html>
+<html lang="it">
+<head>
+ <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3A81CC" />
+
+  <title>App Studenti - Istituto Manzoni</title>
+
+  <!-- Link al manifest PWA -->
+  <link rel="manifest" href="/App-Studenti-/manifest.json" />
+
+  <!-- Icona scorciatoia / favicon (opzionale) -->
+  <link rel="icon" href="/App-Studenti-/logo123.png" type="image/png" />
+
+  <!-- Apple: supporto per aggiunta alla schermata Home -->
+  <link rel="apple-touch-icon" href="/App-Studenti-/logo123.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <!-- CSS o altro -->
+  <link rel="stylesheet" href="style.css" />
+  <style>
+		  
+	  
+	  
+	proposte-title {
+  text-align: center;
+}
+
+
+
+	  
+	  /* Stile generale delle sezioni */
+.section {
+  padding: 60px 20px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  color: #2c3e50;
+}
+
+/* Container delle card */
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+/* Stile per i link alle card */
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Card individuale */
+.card {
+  background-color: #fff;
+  padding: 30px 25px;
+  width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card h3 {
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+  color: #2980b9;
+}
+
+.card p {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Responsive design per mobile */
+@media (max-width: 768px) {
+  .card {
+    width: 90%;
+  }
+}
+
+	  
+	  .cards-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  width: 260px; /* meno larga */
+  border: 2px solid #ccc;
+  border-radius: 20px 0 20px 0;
+  text-decoration: none;
+  color: var(--text-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+  margin-bottom: 20px; /* spazio tra righe */
+}
+
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.card p {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+	  
+	  .logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* distanza tra i due loghi (≈ 1 cm) */
+  margin-bottom: 0.5rem;
+}
+
+.logo-container .logo {
+  height: 50px; /* ridotto al 50% */
+  width: auto;
+  object-fit: contain;
+}
+
+
+
+	  .comunicazione-box {
+  background-color: #ffffff;
+  border-left: 6px solid #2e86de;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+
+.comunicazione-box:hover {
+  transform: translateY(-4px);
+}
+
+.comunicazione-box h3 {
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.comunicazione-box p {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+    :root {
+      --main-color: #3A81CC;
+      --secondary-color: #f4f4f4;
+      --text-color: #333;
+      --font: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+    }
+
+    header {
+      background-color: var(--main-color);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+    }
+
+
+
+    nav {
+      background-color: #1e5fad;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #cce0ff;
+    }
+
+    /* --- NUOVA BARRA TOGGLE SOTTO NAV --- */
+    #toggleMenuContainer {
+      background-color: #1e5fad;
+      text-align: center;
+      padding: 0.5rem 0;
+    }
+
+    #toggleMenuBtn {
+      background-color: #155a9c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    #toggleMenuBtn:hover {
+      background-color: #0f3f66;
+    }
+
+    #toggleMenu {
+      display: none; /* nascosto di default */
+      background-color: #154f87;
+      padding: 0.5rem 0;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    #toggleMenu a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+    }
+
+    #toggleMenu a:hover {
+      background-color: #2e86de;
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    footer {
+      background-color: #ddd;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    form input, form textarea, form select {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    form button {
+      background-color: var(--main-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+      width: auto;
+      transition: background-color 0.3s;
+    }
+
+    form button:hover {
+      background-color: #1b4f9c;
+    }
+
+    .card {
+      background: white;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    #chiSiamo {
+      max-width: 650px;
+      margin: 0 auto;
+      font-family: Arial, sans-serif;
+    }
+
+    #chiSiamo h2 {
+      text-align: center;
+      margin-bottom: 35px;
+      color: #333;
+      font-size: 2.2em;
+    }
+
+    .rappresentante {
+      display: flex;
+      align-items: center;
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 25px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .rappresentante img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 30px;
+      border: 3px solid #4A90E2;
+    }
+
+    .rappresentante-info {
+      flex: 1;
+      color: #222;
+    }
+
+    .rappresentante-info strong {
+      font-size: 1.5em;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .rappresentante-info .ruolo,
+    .rappresentante-info .classe,
+    .rappresentante-info .mail {
+      margin-bottom: 6px;
+      font-size: 1.1em;
+    }
+
+    .rappresentante-info .mail a {
+      color: #4A90E2;
+      text-decoration: none;
+    }
+
+    .rappresentante-info .mail a:hover {
+      text-decoration: underline;
+    }
+
+    /* Comunicazioni */
+    .comunicazione {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-decoration: none;
+      color: var(--text-color);
+    }
+    .comunicazione:hover {
+      background-color: #e6f0ff;
+    }
+    .comunicazione img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-right: 15px;
+      border: 2px solid var(--main-color);
+    }
+
+    .comunicazione .descrizione {
+      font-size: 1.1em;
+      font-weight: 600;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+      }
+
+      nav a {
+        font-size: 1rem;
+        padding: 0.5rem 0;
+        text-align: center;
+        display: block;
+      }
+
+      main {
+        padding: 1rem;
+        margin: 0 0.5rem;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 1rem;
+        font-size: 1rem;
+      }
+
+      form input, form textarea, form select {
+        font-size: 1rem;
+      }
+
+      form button {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+      }
+
+      .rappresentante {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .rappresentante img {
+        margin: 0 0 15px 0;
+        width: 120px;
+        height: 120px;
+      }
+
+      .rappresentante-info {
+        text-align: center;
+      }
+
+      .comunicazione {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .comunicazione img {
+        margin-bottom: 10px;
+        width: 100%;
+        height: auto;
+        border-radius: 6px;
+      }
+    }
+    
+    
+    .orario-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+#risultato-orario table {
+  width: 100%;
+  max-width: 800px;
+  border-collapse: collapse;
+  margin: 0 auto;
+}
+
+#risultato-orario th,
+#risultato-orario td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+
+
+
+@media (max-width: 600px) {
+  #risultato-orario table {
+    font-size: 0.9rem;
+  }
+
+  .orario-container {
+    padding: 10px;
+    overflow-x: auto;
+  }
+}
+
+
+.promessa-card {
+  width: 300px;
+  border-left: 6px solid #ccc;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.promessa-intestazione {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.icon-promise {
+  font-size: 1.4rem;
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid #aaa;
+  background-color: #f4f4f4;
+  color: #222;
+}
+
+/* Colori per stato */
+.icon-promise.mantenuta {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.icon-promise.in-elaborazione {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.icon-promise.non-mantenuta {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.promessa-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.promessa-card p {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+
+  
+  
+  
+  .video-card {
+  width: 340px;
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.video-card ul {
+  padding-left: 20px;
+  margin: 10px 0;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+  background-color: #000;
+}
+
+.video-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+
+.voto-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 12px 8px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.voto-card {
+  min-width: 220px;
+  max-width: 260px;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 12px;
+  padding: 16px 18px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: default;
+}
+
+.voto-card:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+.voto-intestazione {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon-voto {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.vinta .icon-voto {
+  color: #28a745; /* verde */
+}
+
+.in-corso .icon-voto {
+  color: #fd7e14; /* arancione */
+}
+
+.persa .icon-voto {
+  color: #dc3545; /* rosso */
+}
+
+.voto-risultato {
+  font-size: 15px;
+  font-style: italic;
+  padding: 8px 14px;
+  border-radius: 8px;
+  max-width: fit-content;
+  user-select: none;
+  font-weight: 600;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.voto-risultato.positivo {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.voto-risultato.in-corso {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.voto-risultato.negativo {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.quorum-mancante {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #b22222;
+  background-color: #ffe6e6;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 1px 8px rgba(178, 34, 34, 0.3);
+}
+
+
+.voto-intestazione {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon-voto {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  border: 2.5px solid transparent; /* default trasparente */
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Cerchio colorato intorno all’icona per stato */
+.vinta .icon-voto {
+  color: #28a745; /* verde */
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.in-corso .icon-voto {
+  color: #fd7e14; /* arancione */
+  border-color: #fd7e14;
+  background-color: #fff3cd;
+}
+
+.persa .icon-voto {
+  color: #dc3545; /* rosso */
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+
+
+
+
+
+  </style>
+</head> 
+
+
+<body>
+  <header>
+  <div class="logo-container">
+    <img src="manzoni-logo.png" alt="Logo Istituto Manzoni" class="logo" />
+    <img src="lista.png" alt="Logo Lista Studenti" class="logo" />
+  </div>
+  <h1>App per gli studenti - Istituto Manzoni</h1>
+  <p>Resta aggiornato con tutte le novità scolastiche!</p>
+</header> 
+
+
+
+  <!-- Barra toggle sotto la barra blu -->
+  <div id="toggleMenuContainer">
+    <button id="toggleMenuBtn" onclick="toggleMenu()">Menu ▼</button>
+    <div id="toggleMenu">
+      <a href="#" onclick="showSection('home'); return false;">Home</a>
+      <a href="#" onclick="showSection('comunicazioni'); return false;">Comunicazioni</a>
+      <a href="#" onclick="showSection('calendario'); return false;">Calendario</a>
+      <a href="#" onclick="showSection('proposte-voti'); return false;">Proposte e Voti</a>
+      <a href="#" onclick="showSection('tornei'); return false;">Tornei</a>
+      <a href="#" onclick="showSection('promesse'); return false;">Obiettivi</a>
+      <a href="#" onclick="showSection('documenti'); return false;">Documenti</a>
+      <a href="#" onclick="showSection('segnalazioni'); return false;">Segnalazioni</a>      
+    </div>
+  </div>
+  
+  <section class="section" id="promesse">
+  <h2 class="section-title">I nostri obiettivi</h2>
+ <div class="cards-container">
+    
+    <div class="card promessa-card">
+      <div class="promessa-intestazione">
+        <span class="icon-promise in-elaborazione">⌛</span>
+          <h3>Merchadising creato dagli studenti, per gli studenti</h3>
+          </div>
+          <p>Vogliamo realizzare un merchandising scolastico più ampio, interamente creato da voi. Chiunque potrà proporre un design e/o votare i propri preferiti. I più votati saranno realizzati da imprese esterne. In questo modo, la creatività degli studenti verrà ascoltata.</p>
+        </div>
+        <div class="card promessa-card">
+      <div class="promessa-intestazione">
+        <span class="icon-promise in-elaborazione">⌛</span>
+          <h3>Riportare le macchinette a scuola il prima possibile</h3>
+          </div>
+          <p>Chiediamo che le macchinette siano riportate a scuola al più presto, perché rappresentano un servizio importante per tutti gli studenti. Offrono infatti la possibilità di fare una pausa con snack e bevande, aiutando a mantenere energia e concentrazione durante le lezioni. Riportarle significherebbe migliorare il benessere e la qualità della vita scolastica.</p>
+        </div>
+        <div class="card promessa-card">
+      <div class="promessa-intestazione">
+        <span class="icon-promise in-elaborazione">⌛</span>
+          <h3>Più tornei</h3>
+          </div>
+          <p>Vogliamo organizzare una serie di tornei pensati per tutti gli studenti, non solo per gli appassionati di sport, ma anche per chi è interessato ai videogiochi e ad altre attività. Sarà proprio a voi il compito di proporre queste competizioni.</p>
+        </div> 
+    
+  
+   
+
+    <!-- PROMESSA IN CORSO -->
+    <div class="card promessa-card">
+      <div class="promessa-intestazione">
+        <span class="icon-promise in-elaborazione">⌛</span>
+        <h3>Bagni scolastici più puliti e funzionali</h3>
+      </div>
+      <p>Vogliamo rendere i bagni scolastici più puliti e meglio attrezzati per garantire igiene e comfort a tutti</p>
+    </div>
+
+    
+    
+    
+    
+  
+</section>
+  
+  
+ <section id="abc" class="section">
+  <h2 class="section-title">Aggiungi l'App alla Home</h2>
+  <div class="cards-container">
+    <!-- VIDEO iPhone -->
+    <div class="card video-card">
+      <h3>📱 iPhone / iOS</h3>
+      <p>Per aggiungere l'app alla schermata Home su iPhone:</p>
+      <ul>
+        <li>Apri il sito in Safari.</li>
+        <li>Tocca il pulsante <strong>Condividi</strong> (quadrato con freccia).</li>
+        <li>Seleziona <strong>"Aggiungi a Home"</strong>.</li>
+      </ul>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.youtube.com/embed/8_NWruTCkaQ"
+          title="Come aggiungere l'app alla Home iPhone"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen muted>
+        </iframe>
+      </div>
+    </div>
+
+    <!-- VIDEO Android -->
+    <div class="card video-card">
+      <h3>📱 Android</h3>
+      <p>Per aggiungere l'app alla schermata Home su Android:</p>
+      <ul>
+        <li>Apri il sito in Chrome.</li>
+        <li>Tocca il menu con i <strong>tre puntini</strong> in alto a destra.</li>
+        <li>Seleziona <strong>"Aggiungi a schermata Home"</strong>.</li>
+      </ul>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.youtube.com/embed/pcOwsaQMzQU"
+          title="Come aggiungere l'app alla Home Android"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen muted>
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section> <!-- ✅ Solo UNA chiusura qui! -->
+
+ </div>
+</div>
+   
+   </div>
+</div>
+  
+   
+  <section id="proposte-voti" class="section">
+  <div class="container">
+    <h2 class="section-title proposte-title">Proposte e Voti</h2>
+    <div class="cards-container">
+      <!-- Proposte -->
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdr3p4i3nQnPQv3jUr3S4HrR0ZPjb8mJpzcrlzJxA6Vm-c7wA/viewform?usp=header" target="_blank" class="card-link">
+        <div class="card">
+          <h3>Proposte</h3>
+          <p>Invia la tua idea per migliorare la scuola! Compila il modulo con la tua proposta.</p>
+        </div>
+      </a>
+      <!-- Votazioni in Corso -->
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeGN-jVt7k1feK4dduDX5F86ICaze-Qhua8qUu2DvieZIYZbw/viewform?usp=header" target="_blank" class="card-link">
+        <div class="card">
+          <h3>Votazioni in Corso</h3>
+          <p>Vota tra le proposte della settimana e fai sentire la tua voce!</p>
+        </div>
+      </a>
+      <!-- Archivio Votazioni -->
+   <a href="#archivio" class="card-link">
+  <div class="card">
+    <h3>Archivio Votazioni</h3>
+    <p>Consulta lo storico di tutte le votazioni passate e i risultati ottenuti.</p>
+  </div>
+</a>
+
+</section>
+
+<div id="archivio" class="section">
+  <h2>Archivio Votazioni</h2>
+   <div class="voto-card quorum-non-raggiunto">
+  <div class="voto-intestazione">
+    <span class="icon-voto">⚠️</span>
+    <h3>Nessuna votazione disponibile</h3>
+  </div>
+  <p>Non sono ancora state effettuate votazioni</p>
+
+</div>
+</div>
+</div>
+
+  <main>
+      <div id="home" class="section active"> 
+      <h2>Benvenuto!</h2>
+      <p>Questa è l'app ufficiale della lista Insieme per il Cambiamento dell'Istituto Manzoni. Naviga tra le sezioni per scoprire tutte le funzionalità!</p>
+      <div class="grid">
+ <div class="card" data-target="comunicazioni"><h3>📢 Novità</h3><p>Leggi le ultime notizie scolastiche</p></div>
+      <div class="card" data-target="calendario"><h3>📅 Calendario</h3><p>Scopri le date importanti dell'anno</p></div>
+      <div class="card" data-target="proposte-voti"><h3>🗳️ Vota Ora</h3><p>Partecipa alle votazioni in corso</p></div>
+    </div>
+  </div>
+
+      </div>
+    </div>
+    
+
+     <section class="section" id="calendario">
+  <h2>Calendario Eventi</h2>
+  <div style="display: flex; gap: 20 px; max-width: 900px;">
+   
+
+    <!-- Colonna destra: Pulsante + eventi inventati -->
+ <div style="flex: 1; min-width: 300px;">
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSeXAMPLELINK/viewform" target="_blank" style="
+    display: block;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    text-decoration: none;
+  ">Proponi Evento</a>
+
+
+      <div id="eventi-lista">
+        <!-- Eventi inventati verranno inseriti qui -->
+        <div id="eventi-lista" style="max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+  <div class="evento-card">
+    <div class="evento-date">📅 12 Settembre 2025</div>
+    <div class="evento-title">Inizio della scuola</div>
+    <div class="evento-desc">Ripresa delle attività didattiche.</div>
+  </div>
+  
+<style>
+  #eventi-lista {
+    scrollbar-width: thin;
+    scrollbar-color: #22c55e #e0e0e0;
+  }
+  #eventi-lista::-webkit-scrollbar {
+    width: 8px;
+  }
+  #eventi-lista::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 8px;
+  }
+  #eventi-lista::-webkit-scrollbar-thumb {
+    background-color: #22c55e;
+    border-radius: 8px;
+  }
+  .evento-card {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.5);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+  }
+  .evento-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.8);
+  }
+  .evento-date {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .evento-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .evento-desc {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+</style>
+
+    </div>
+  </div>
+</section>
+
+
+
+  
+
+    
+    <div id="documenti" class="section">
+      <h2>Documenti Ufficiali</h2>
+      <div class="card"><a href="regolamento_scolastico.pdf" target="_blank" rel="noopener noreferrer">Regolamento Scolastico (PDF)</a></div>
+      <div class="card"><a href="gite.pdf" target="_blank" rel="noopener noreferrer">Regolamento gite (PDF)</a></div>
+      <div class="card"><a href="aule.pdf" target="_blank" rel="noopener noreferrer">Regolamento Aule Tematiche  (PDF)</a></div> 
+    </div>
+
+<div id="comunicazioni" class="section">
+  <h2 style="font-size: 2.5rem; color: #1e3a8a; text-align: center; margin-bottom: 2rem;">📢 Comunicazioni</h2>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto;">
+
+       <div class="comunicazione-box">
+      <h3>📋 Sondaggio Studenti</h3>
+<p>Dicci la tua su problemi, idee e cosa migliorare a scuola. <br> <a href="https://forms.gle/9oyd7YpvjkkJU4MB8" target="_blank">Partecipa al sondaggio</a></p>
+
+    </div>
+    
+     <div class="comunicazione-box">
+    <h3>Ricreazione</h3>
+          <p> Dopo tanto tempo che l'aspettavamo, la ricreazione <strong>torna a durare 15 minuti!</strong>, iniziera dalle 10:55 fino alle 11:10. Una vera e propria vittoria per noi studenti.</p>
+        </div>
+   
+    <div class="comunicazione-box">
+      <h3>Primo giorno di scuola</h3>
+          <p>Le classi 1ª entreranno nell’Ala Rossa <strong>alle ore 9:00</strong>; mentre tutte le altre classi entreranno alle ore 10:00.</p>
+        </div>
+
+   </section>
+ </div>
+</div>
+
+
+
+<div id="tornei" class="section">
+  <h2>🏆 Tornei</h2>
+  <p>In questa sezione troverai i tornei scolastici organizzati dagli studenti o dalla scuola. Partecipa anche tu!</p>
+  <div class="grid">
+    <!-- Card con link al modulo di iscrizione -->
+    <div class="card">
+  <h3>Nessun torneo disponibile</h3>
+  <p>Al momento non ci sono tornei attivi. Torna presto per nuove iniziative!</p>
+</div>
+
+  </div>
+</div>
+
+
+
+
+   <div id="segnalazioni" class="section">
+      <h2>Segnalazioni Studenti</h2>
+      <form onsubmit="inviaSegnalazione(); return false;">
+        <input type="text" id="segnalatore" placeholder="Nome e classe" required />
+        <textarea id="testoSegnalazione" placeholder="Scrivi qui la segnalazione" rows="4" required></textarea>
+        <button type="submit">Invia Segnalazione</button>
+      </form>
+      <p id="confermaSegnalazione" style="color: green; margin-top: 1rem;"></p>
+    </div>
+  </main>
+  
+
+  <footer>
+    &copy; 2025 Istituto Manzoni - App creata dagli studenti | <a href="#" onclick="showSection('abc'); return false;">Aggiungi l'App alla Home</a>
+  </footer> 
+<script>
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Funzione per mostrare il menu mobile
+    function toggleMenu() {
+        const menu = document.getElementById('toggleMenu');
+        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Listener per i link che cambiano sezione
+    document.querySelectorAll('a[href^="#"], .card[data-target]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            let targetId;
+            if (this.tagName === 'A') {
+                targetId = this.getAttribute('href').substring(1);
+            } else {
+                targetId = this.getAttribute('data-target');
+            }
+
+            if (targetId) {
+                e.preventDefault();
+                showSection(targetId);
+            }
+        });
+    });
+
+    // Funzione per inviare le segnalazioni via email
+    function inviaSegnalazione() {
+        const segnalatore = document.getElementById('segnalatore').value || 'Anonimo';
+        const testo = document.getElementById('testoSegnalazione').value;
+        const destinatario = 'khemiri.1015831@manzoni.edu.it'; 
+        const oggetto = encodeURIComponent('Segnalazione Studenti da ' + segnalatore);
+        const corpo = encodeURIComponent(testo);
+        const mailtoLink = `mailto:${destinatario}?subject=${oggetto}&body=${corpo}`;
+        window.location.href = mailtoLink;
+    }
+
+    // Funzione per caricare l'orario delle classi (codice rimosso per brevità, ma puoi reinserirlo)
+    function caricaOrario(classe) {
+        // [qui puoi rimettere il codice della funzione caricaOrario]
+    }
+
+    // Rendi la sezione "Home" attiva all'avvio
+    document.addEventListener('DOMContentLoaded', () => {
+        showSection('home');
+    });
+</script>
+
+
+
+
+</body>
+</html> 
