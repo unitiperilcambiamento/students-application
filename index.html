@@ -1449,14 +1449,14 @@
 
  if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!');
 
- let file_url = "";
+ let nome_file = "";
+ let file_dati = "";
  if(fileInput.files && fileInput.files[0]) {
- // In una implementazione reale qui caricheresti il file su Supabase Storage
- // Per ora simuliamo un URL o salviamo il nome
- file_url = "uploads/" + fileInput.files[0].name;
+ nome_file = fileInput.files[0].name;
+ file_dati = "uploads/" + nome_file; // Placeholder per file_dati
  }
 
- const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_url });
+ const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file });
  if(error) return alert("Errore nel caricamento degli appunti.");
 
  alert('Appunti caricati con successo!');
