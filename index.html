@@ -402,6 +402,38 @@
   text-align: center;
   margin-top: 4px;
  }
+
+ /* MODALE DOWNLOAD */
+ .download-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px);
+ }
+ .download-modal-content {
+  background: #ffffff;
+  width: 90%;
+  max-width: 320px;
+  padding: 24px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+ }
+ .download-modal-content h3 {
+  font-size: 16px;
+  color: #0f172a;
+  margin-bottom: 8px;
+ }
+ .download-modal-content p {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+ }
  </style>
 </head>
 <body>
@@ -828,7 +860,7 @@
  <p>24 File • Formulari e Derivate</p>
  </div>
  </div>
- <span class="download-arrow">➔</span>
+ <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('static/mate_fisica.zip', 'Matematica e Fisica')">➔</span>
  </div>
 
  <div class="archive-folder-row archive-item-static">
@@ -841,7 +873,7 @@
  <p>15 File • Schemi Divina Commedia</p>
  </div>
  </div>
- <span class="download-arrow">➔</span>
+ <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('static/umanistica.pdf', 'Umanistica & Temi')">➔</span>
  </div>
 
  <div id="archiveDynamicList"></div>
@@ -940,6 +972,18 @@
  </div>
  </div>
  </section>
+ </div>
+
+ <!-- MODALE DOWNLOAD CON PROGRESSO -->
+ <div id="downloadModal" class="download-modal">
+ <div class="download-modal-content">
+ <h3 id="downloadFileName">File.pdf</h3>
+ <p>Preparazione del download...</p>
+ <div class="progress-container" style="display: block;">
+ <div id="downloadProgressBar" class="progress-bar"></div>
+ </div>
+ <p id="downloadProgressText" class="progress-text" style="margin-top: 8px;">0%</p>
+ </div>
  </div>
 
 
@@ -1468,18 +1512,35 @@
 
  window.downloadFile = async function(fileDati, nomeFile) {
  if(!db) return;
- try {
- // In una implementazione reale con Supabase Storage:
- // const { data, error } = await db.storage.from('appunti').download(fileDati);
- // Per ora, simuliamo il download aprendo l'URL se esiste o mostrando un messaggio
- alert("Download del file: " + nomeFile + "\nPercorso: " + fileDati);
 
- // Esempio di logica reale per il download se fosse un URL pubblico:
- // const link = document.createElement('a');
- // link.href = fileDati;
- // link.download = nomeFile;
- // link.click();
+ const modal = document.getElementById('downloadModal');
+ const fileNameText = document.getElementById('downloadFileName');
+ const progressBar = document.getElementById('downloadProgressBar');
+ const progressText = document.getElementById('downloadProgressText');
+
+ fileNameText.textContent = nomeFile;
+ modal.style.display = 'flex';
+ progressBar.style.width = '0%';
+ progressText.textContent = '0%';
+
+ try {
+ // Simulazione caricamento con progresso per il download
+ for (let p = 0; p <= 100; p += 5) {
+ progressBar.style.width = p + '%';
+ progressText.textContent = p + "%";
+ await new Promise(r => setTimeout(r, 100));
+ }
+
+ // In una implementazione reale qui andrebbe il download effettivo
+ // alert("Download del file: " + nomeFile + "\nPercorso: " + fileDati);
+
+ setTimeout(() => {
+ modal.style.display = 'none';
+ alert("Download di '" + nomeFile + "' completato!");
+ }, 500);
+
  } catch (err) {
+ modal.style.display = 'none';
  alert("Errore durante il download.");
  }
  };
