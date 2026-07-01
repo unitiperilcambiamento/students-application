@@ -1531,12 +1531,20 @@
  await new Promise(r => setTimeout(r, 100));
  }
 
- // In una implementazione reale qui andrebbe il download effettivo
- // alert("Download del file: " + nomeFile + "\nPercorso: " + fileDati);
+ // Download effettivo del file (Base64)
+ if(fileDati && fileDati.startsWith('data:')) {
+ const link = document.createElement('a');
+ link.href = fileDati;
+ link.download = nomeFile;
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+ } else {
+ alert("Download del file statico: " + nomeFile);
+ }
 
  setTimeout(() => {
  modal.style.display = 'none';
- alert("Download di '" + nomeFile + "' completato!");
  }, 500);
 
  } catch (err) {
@@ -1558,7 +1566,16 @@
 
  const file = fileInput.files[0];
  const nome_file = file.name;
- const file_dati = "uploads/" + Date.now() + "_" + nome_file;
+
+ // Funzione per leggere il file come Base64
+ const readAsBase64 = (f) => new Promise((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onload = () => resolve(reader.result);
+ reader.onerror = reject;
+ reader.readAsDataURL(f);
+ });
+
+ const file_dati = await readAsBase64(file);
 
  // UI Progress
  const progressContainer = document.getElementById('uploadProgressContainer');
@@ -1599,6 +1616,13 @@
  navigateTo('view-archivio', null, 'ARCHIVIO CONDIVISO');
  };
 
+ function escapeHTML(str) {
+ if(!str) return "";
+ return str.replace(/[&<>"']/g, function(m) {
+ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+ });
+ }
+
  function creaCardAppunto(appunto) {
  const card = document.createElement('div');
  card.className = 'note-card archive-item-dynamic';
@@ -1611,13 +1635,15 @@
  <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
  </div>
  <div class="note-info">
- <h4>${appunto.materia}</h4>
- <p><strong>${appunto.argomento}</strong><br>Prof. ${appunto.docente}</p>
- ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${appunto.note}</p>` : ''}
+ <h4>${escapeHTML(appunto.materia)}</h4>
+ <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p>
+ ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''}
  <div class="note-meta">Caricato da uno studente</div>
  </div>
- <span class="download-arrow" style="cursor:pointer;" onclick="downloadFile('${appunto.file_dati}', '${appunto.nome_file}')">➔</span>
+ <span class="download-arrow" style="cursor:pointer;">➔</span>
  `;
+
+ card.querySelector('.download-arrow').onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file);
  return card;
  }
 
