@@ -1536,13 +1536,8 @@
  const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
  const publicUrl = data.publicUrl;
 
- const link = document.createElement('a');
- link.href = publicUrl;
- link.download = nomeFile;
- link.target = "_blank";
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
+ // Metodo window.open per massima compatibilità mobile
+ window.open(publicUrl, '_blank');
  } else {
  alert("Download del file statico: " + nomeFile);
  }
