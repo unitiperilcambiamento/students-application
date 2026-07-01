@@ -312,8 +312,7 @@
  .floating-add-btn {
   position: fixed;
   bottom: 105px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px;
   background: #000;
   color: #fff;
   border: none;
@@ -327,6 +326,12 @@
   cursor: pointer;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+ }
+
+ @media (min-width: 412px) {
+  .floating-add-btn {
+  right: calc(50% - 186px);
+  }
  }
  </style>
 </head>
