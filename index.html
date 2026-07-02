@@ -12,6 +12,7 @@
  <meta name="apple-mobile-web-app-title" content="Lista 2"> 
  <meta name="mobile-web-app-capable" content="yes"> 
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
  
  <style> 
  /* ========================================================================== 
@@ -97,22 +98,6 @@
  line-height: 1.25; 
  } 
  
- .notif-btn { 
- position: absolute; 
- top: 35px; 
- right: 24px; 
- background: rgba(255, 255, 255, 0.15); 
- border: none; 
- width: 38px; 
- height: 38px; 
- border-radius: 50%; 
- color: #ffffff; 
- font-size: 18px; 
- display: flex; 
- justify-content: center; 
- align-items: center; 
- cursor: pointer; 
- } 
  
  /* SEZIONE NOTIZIE (STACCATA DALL'HEADER) */ 
  .news-slider-section { 
@@ -308,6 +293,175 @@
  
  
  @keyframes smoothFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } 
+ 
+ .floating-add-btn { 
+  position: fixed; 
+  bottom: 105px; 
+  right: 20px; 
+  background: #000; 
+  color: #fff; 
+  border: none; 
+  border-radius: 12px; 
+  width: 50px; 
+  height: 50px; 
+  font-size: 30px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  cursor: pointer; 
+  z-index: 1000; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+ } 
+ 
+ @media (min-width: 412px) { 
+  .floating-add-btn { 
+  right: calc(50% - 186px); 
+  } 
+ } 
+
+ .note-card { 
+  background: white; 
+  border-radius: 18px; 
+  padding: 16px; 
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  margin-bottom: 12px; 
+ } 
+ .note-icon { 
+  width: 48px; 
+  height: 48px; 
+  background: #f1f5f9; 
+  border-radius: 12px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-shrink: 0; 
+ } 
+ .note-icon svg { 
+  width: 24px; 
+  height: 24px; 
+  fill: var(--accent-color); 
+ } 
+ .note-info { 
+  flex-grow: 1; 
+ } 
+ .note-info h4 { 
+  font-size: 15px; 
+  color: #0f172a; 
+  font-weight: 700; 
+  margin-bottom: 2px; 
+ } 
+ .note-info p { 
+  font-size: 12px; 
+  color: #64748b; 
+  line-height: 1.4; 
+ } 
+ .note-info .note-meta { 
+  font-size: 11px; 
+  color: var(--accent-color); 
+  font-weight: 700; 
+  margin-top: 4px; 
+ } 
+
+ .tournament-card { 
+  min-width: 220px; 
+  background: white; 
+  border-radius: 20px; 
+  padding: 18px; 
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+  cursor: pointer; 
+ } 
+ .tournament-card h3 { 
+  font-size: 15px; 
+  color: #0f172a; 
+  margin-bottom: 6px; 
+ } 
+ .tournament-card p { 
+  font-size: 12px; 
+  color: #64748b; 
+ } 
+ .tournament-tag { 
+  display: inline-block; 
+  padding: 4px 10px; 
+  background: #f0fdf4; 
+  color: #166534; 
+  font-size: 10px; 
+  font-weight: 700; 
+  border-radius: 20px; 
+  margin-top: 10px; 
+ } 
+
+ .progress-container { 
+  display: none; 
+  width: 100%; 
+  height: 8px; 
+  background-color: #e2e8f0; 
+  border-radius: 999px; 
+  overflow: hidden; 
+  margin-top: 10px; 
+ } 
+ .progress-bar { 
+  width: 0%; 
+  height: 100%; 
+  background-color: var(--accent-color); 
+  transition: width 0.3s ease; 
+ } 
+ .progress-text { 
+  font-size: 11px; 
+  color: #64748b; 
+  text-align: center; 
+  margin-top: 4px; 
+ } 
+
+ /* MODALE DOWNLOAD */ 
+ .download-modal { 
+  display: none; 
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  background: rgba(15, 23, 42, 0.7); 
+  z-index: 2000; 
+  justify-content: center; 
+  align-items: center; 
+  backdrop-filter: blur(4px); 
+ } 
+ .download-modal-content { 
+  background: #ffffff; 
+  width: 90%; 
+  max-width: 320px; 
+  padding: 24px; 
+  border-radius: 24px; 
+  text-align: center; 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+ } 
+ .download-modal-content h3 { 
+  font-size: 16px; 
+  color: #0f172a; 
+  margin-bottom: 8px; 
+ } 
+ .download-modal-content p { 
+  font-size: 13px; 
+  color: #64748b; 
+  margin-bottom: 20px; 
+ } 
+
+ .voting-proposals-container { display: flex; flex-direction: column; gap: 16px; } 
+ .voting-card { background: white; border-radius: 18px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; } 
+ .voting-info { flex-grow: 1; } 
+ .voting-info h4 { font-size: 14px; color: #0f172a; font-weight: 700; margin-bottom: 4px; } 
+ .voting-info p { font-size: 12px; color: #64748b; line-height: 1.4; } 
+ .vota-btn { background: var(--accent-color); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; } 
+ .vota-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #94a3b8; } 
+ .chart-wrapper { width: 100%; max-width: 280px; margin: 0 auto; padding: 10px 0; } 
+ .archive-vote-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; } 
+ .archive-vote-header { display: flex; justify-content: space-between; align-items: center; } 
+ .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; } 
+ .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; } 
+ .archive-vote-details { font-size: 11.5px; color: #64748b; } 
  </style> 
 </head> 
 <body> 
@@ -321,7 +475,6 @@
  <img src="123.png" alt="Logo Scuola" class="header-logo-free"> 
  </div> 
  <h1 class="main-title" id="headerTitle">BENVENUTI SULL'APP<br>DELLA LISTA 2</h1> 
- <button class="notif-btn"> </button> 
  </header> 
  
  
@@ -358,15 +511,15 @@
  <h3 class="author-name">Federico Rossi</h3> 
  <span class="author-role">Rappresentante d'Istituto</span> 
  </div> 
- <span class="post-date">12:30</span> 
+ <span class="post-date" data-timestamp="2026-07-02T11:45:00">12:30</span> 
  </div> 
  <div class="post-content"> 
  <p>Ciao a tutti! Vi ricordo che venerdì alle 11 ci sarà l'assemblea studentesca generale in aula magna per raccogliere idee sulle proposte del prossimo trimestre. Passate parola!</p> 
  </div> 
  <div class="post-actions-bar"> 
- <button class="action-btn like-btn" data-post-id="1" data-default-likes="34" onclick="toggleLike(this)"> 
+ <button class="action-btn like-btn" data-post-id="1" data-default-likes="0" onclick="toggleLike(this)"> 
  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
- <span class="like-count">34</span> 
+ <span class="like-count">0</span> 
  </button> 
  </div> 
  </div> 
@@ -376,15 +529,15 @@
  <h3 class="author-name">Marco Bianchi</h3> 
  <span class="author-role">Rappresentante d'Istituto</span> 
  </div> 
- <span class="post-date">Ieri</span> 
+ <span class="post-date" data-timestamp="2026-07-01T09:00:00">Ieri</span> 
  </div> 
  <div class="post-content"> 
  <p>Grandi ragazzi! Abbiamo appena chiuso l'accordo per rinnovare le convenzioni con i principali punti di ristoro vicino alla scuola. Trovate i dettagli subito sotto nelle collaborazioni!</p> 
  </div> 
  <div class="post-actions-bar"> 
- <button class="action-btn like-btn" data-post-id="2" data-default-likes="52" onclick="toggleLike(this)"> 
+ <button class="action-btn like-btn" data-post-id="2" data-default-likes="0" onclick="toggleLike(this)"> 
  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
- <span class="like-count">52</span> 
+ <span class="like-count">0</span> 
  </button> 
  </div> 
  </div> 
@@ -521,6 +674,54 @@
  </div> 
  </div> 
  <div id="marketDynamicHome" style="display: contents;"></div> 
+ </div> 
+ </section> 
+
+ <!-- SEZIONE PROPOSTE E VOTAZIONI --> 
+ <section class="section-container"> 
+ <h2 class="section-title-margin">Proposte e Votazioni</h2> 
+ <div class="collab-scroll-container"> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-invia-proposta', null, 'INVIA UNA PROPOSTA')"> 
+ <h3>Invia una Proposta</h3> 
+ <p>Condividi le tue idee per migliorare la nostra scuola.</p> 
+ <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span> 
+ </div> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-votazioni', null, 'VOTAZIONI')"> 
+ <h3>Votazioni Attive</h3> 
+ <p>Partecipa alle votazioni in corso e guarda i risultati.</p> 
+ <span class="tournament-tag">Vota ora</span> 
+ </div> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-archivio-storico-votazioni', null, 'ARCHIVIO VOTAZIONI')"> 
+ <h3>Archivio Votazioni</h3> 
+ <p>Scopri i risultati delle scorse edizioni e delle proposte approvate.</p> 
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">Storico</span> 
+ </div> 
+  
+ </div> 
+ </section> 
+ 
+ <!-- SEZIONE TORNEI --> 
+ <section class="section-container"> 
+ <h2 class="section-title-margin">Tornei</h2> 
+ <div class="collab-scroll-container" id="torneiHomeContainer"> 
+ <div class="tournament-card" style="opacity: 0.7; pointer-events: none; min-width: 220px;"> 
+ <h3>Altri tornei...</h3> 
+ <p>Nessun altro torneo ancora disponibile.</p> 
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">In arrivo</span> 
+ </div> 
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Calcetto')" style="min-width: 220px;"> 
+ <h3>Torneo di Calcetto</h3> 
+ <p>Sfida le altre classi nel torneo più atteso dell'anno!</p> 
+ <span class="tournament-tag">Iscrizioni aperte</span> 
+ </div> 
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Pallavolo')" style="min-width: 220px;"> 
+ <h3>Torneo di Pallavolo</h3> 
+ <p>Partecipa al torneo di pallavolo misto della scuola.</p> 
+ <span class="tournament-tag">Iscrizioni aperte</span> 
+ </div> 
  </div> 
  </section> 
  </div> 
@@ -715,36 +916,18 @@
  
  <!-- ================= VISTA 3: ARCHIVIO DRIVE CONDIVISO ================= --> 
  <div id="view-archivio" class="app-view"> 
- <div class="view-title-banner">Archivio Materiali & Appunti</div> 
- <div class="section-container"> 
- <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti della Lista 2.</p> 
-  
- <div class="archive-folder-row"> 
- <div class="folder-left-side"> 
- <div class="folder-icon-plate"> 
- <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
- </div> 
- <div class="folder-titles"> 
- <h4>Matematica e Fisica</h4> 
- <p>24 File • Formulari e Derivate</p> 
- </div> 
- </div> 
- <span class="download-arrow">➔</span> 
+ <div class="view-title-banner">Drive Appunti</div> 
+ 
+ <div class="search-filter-wrapper" style="margin-top: 10px;"> 
+ <input type="text" id="archiveSearch" class="filter-input" placeholder=" Cerca materia, argomento o docente..." oninput="filterArchive()"> 
  </div> 
  
- <div class="archive-folder-row"> 
- <div class="folder-left-side"> 
- <div class="folder-icon-plate"> 
- <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
+ <div class="section-container" id="archiveContainer"> 
+ <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti del nostro istituto</p> 
+  
+ <div id="archiveDynamicList"></div> 
  </div> 
- <div class="folder-titles"> 
- <h4>Umanistica & Temi</h4> 
- <p>15 File • Schemi Divina Commedia</p> 
- </div> 
- </div> 
- <span class="download-arrow">➔</span> 
- </div> 
- </div> 
+ <button class="floating-add-btn" onclick="navigateTo('view-carica-appunti', null, 'CARICA APPUNTI')">+</button> 
  </div> 
  
  
@@ -767,6 +950,135 @@
  </div> 
  <div class="calendar-list" id="calendarEventList"></div> 
  </section> 
+ <button class="floating-add-btn" onclick="navigateTo('view-proponi-assemblea', null, 'PROPONI ASSEMBLEA')">+</button> 
+ </div> 
+
+ <!-- ================= VISTA: PROPONI UN ASSEMBLEA ================= --> 
+ <div id="view-proponi-assemblea" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Proponi un'Assemblea</span> 
+ <span class="back-link" onclick="navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Inviaci la tua proposta per una nuova assemblea. Specifica il titolo e cosa vorresti fare.</p> 
+ <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)"> 
+ <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea> 
+ <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: INVIA UNA PROPOSTA (VOTAZIONE) ================= --> 
+ <div id="view-invia-proposta" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Invia una Proposta</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p> 
+ <input type="text" id="votazioneTitolo" class="filter-input" placeholder="Titolo della proposta"> 
+ <select id="votazioneCategoria" class="filter-input"> 
+ <option value="Evento">Evento</option> 
+ <option value="Servizio">Servizio</option> 
+ <option value="Miglioria">Miglioria</option> 
+ <option value="Altro">Altro</option> 
+ </select> 
+ <textarea id="votazioneDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea> 
+ <button onclick="inviaPropostaVotazione()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: VOTAZIONI ================= --> 
+ <div id="view-votazioni" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Votazioni</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container"> 
+ <div class="voting-proposals-container" id="proposteAttiveList"> 
+ <!-- Caricate dinamicamente --> 
+ </div> 
+  
+ <div class="chart-wrapper" style="margin-top: 30px;"> 
+ <canvas id="votingChart"></canvas> 
+ </div> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: ARCHIVIO STORICO VOTAZIONI ================= --> 
+ <div id="view-archivio-storico-votazioni" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Archivio Votazioni</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container" id="archivioVotazioniList"> 
+ <!-- Caricato dinamicamente --> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: CARICA APPUNTI ================= --> 
+ <!-- ================= VISTA: ISCRIZIONE TORNEO ================= --> 
+ <div id="view-iscrizione-torneo" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span id="titoloTorneoIscrizione">Iscrizione Torneo</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <input type="text" id="iscrizioneNome" class="filter-input" placeholder="Il tuo Nome"> 
+ <input type="text" id="iscrizioneCognome" class="filter-input" placeholder="Il tuo Cognome"> 
+ <input type="text" id="iscrizioneClasse" class="filter-input" placeholder="La tua Classe"> 
+ <input type="email" id="iscrizioneEmail" class="filter-input" placeholder="La tua Email"> 
+  
+ <div id="ruoloTorneoSezione" style="margin-top: 10px;"> 
+ <p style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px;">Ti stai iscrivendo come:</p> 
+ <div style="display: flex; gap: 20px;"> 
+ <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;"> 
+ <input type="radio" name="ruoloTorneo" value="spettatore" checked onclick="toggleSezioneCapitano(false)"> Spettatore 
+ </label> 
+ <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;"> 
+ <input type="radio" name="ruoloTorneo" value="capitano" onclick="toggleSezioneCapitano(true)"> Capitano 
+ </label> 
+ </div> 
+ </div> 
+  
+ <!-- SEZIONE AGGIUNTIVA PER IL CAPITANO --> 
+ <div id="sezioneCapitano" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #e2e8f0;"> 
+ <input type="text" id="squadraNome" class="filter-input" placeholder="Nome della Squadra"> 
+ <input type="number" id="squadraMembriCount" class="filter-input" placeholder="Numero membri (escluso te)" oninput="generaCampiMembri(this.value)"> 
+  
+ <div id="containerMembriSquadra" style="display: flex; flex-direction: column; gap: 15px;"> 
+ <!-- I campi dei membri verranno generati qui --> 
+ </div> 
+ </div> 
+  
+ <button onclick="inviaIscrizioneTorneo()" class="answer-send-btn" style="margin-top: 20px;">Invia iscrizione</button> 
+ </div> 
+ </div> 
+
+ 
+ <div id="view-carica-appunti" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Carica i tuoi Appunti</span> 
+ <span class="back-link" onclick="navigateTo('view-archivio', null, 'DRIVE APPUNTI')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Condividi i tuoi appunti con gli altri studenti. Compila i campi e seleziona il file.</p> 
+ <input type="text" id="appuntiMateria" class="filter-input" placeholder="Materia (es. Matematica)"> 
+ <input type="text" id="appuntiArgomento" class="filter-input" placeholder="Argomento (es. Derivate)"> 
+ <input type="text" id="appuntiDocente" class="filter-input" placeholder="Docente"> 
+ <textarea id="appuntiNote" class="filter-input" style="height: 80px; resize: none;" placeholder="Eventuali note..."></textarea> 
+  
+ <div style="background: white; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('appuntiFile').click()"> 
+ <span style="font-size: 13px; color: #64748b;" id="fileNameDisplay">Seleziona un file (PDF, Immagine...)</span> 
+ <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)"> 
+ </div> 
+
+ <div id="uploadProgressContainer" class="progress-container"> 
+ <div id="uploadProgressBar" class="progress-bar"></div> 
+ <p id="uploadProgressText" class="progress-text">Caricamento: 0%</p> 
+ </div> 
+  
+ <button id="btnInviaAppunti" onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button> 
+ </div> 
  </div> 
  
  
@@ -798,6 +1110,18 @@
  </section> 
  </div> 
  
+ <!-- MODALE DOWNLOAD CON PROGRESSO --> 
+ <div id="downloadModal" class="download-modal"> 
+ <div class="download-modal-content"> 
+ <h3 id="downloadFileName">File.pdf</h3> 
+ <p>Preparazione del download...</p> 
+ <div class="progress-container" style="display: block;"> 
+ <div id="downloadProgressBar" class="progress-bar"></div> 
+ </div> 
+ <p id="downloadProgressText" class="progress-text" style="margin-top: 8px;">0%</p> 
+ </div> 
+ </div> 
+ 
  
  <!-- NAVBAR FLUTTUANTE IN BASSO --> 
  <nav class="bottom-nav"> 
@@ -807,7 +1131,7 @@
  <button class="nav-item" onclick="navigateTo('view-obiettivi', this, 'IL NOSTRO PROGRAMMA')"> 
  <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg> 
  </button> 
- <button class="nav-item center-item" onclick="navigateTo('view-archivio', this, 'ARCHIVIO CONDIVISO')"> 
+ <button class="nav-item center-item" onclick="navigateTo('view-archivio', this, 'DRIVE APPUNTI')"> 
  <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
  </button> 
  <button class="nav-item" onclick="navigateTo('view-calendario', this, 'AGENDA ASSEMBLEE')"> 
@@ -823,6 +1147,33 @@
  
  <!-- SCRIPT LOGICI DI FUNZIONAMENTO --> 
  <script> 
+ // 0. LOGICA TEMPI RELATIVI PER I POST 
+ function updateRelativeTimes() { 
+ const now = new Date(); 
+ document.querySelectorAll('.post-date[data-timestamp]').forEach(el => { 
+ const timestamp = new Date(el.dataset.timestamp); 
+ const diffMs = now - timestamp; 
+ const diffMin = Math.floor(diffMs / 60000); 
+ const diffOre = Math.floor(diffMs / 3600000); 
+ const diffGiorni = Math.floor(diffMs / 86400000); 
+  
+ if (diffMin < 60) { 
+ // Sotto i 60 minuti: mostra l'orario originale HH:mm 
+ const hh = String(timestamp.getHours()).padStart(2, '0'); 
+ const mm = String(timestamp.getMinutes()).padStart(2, '0'); 
+ el.textContent = `${hh}:${mm}`; 
+ } else if (diffOre < 24) { 
+ el.textContent = `${diffOre} ${diffOre === 1 ? 'ora' : 'ore'} fa`; 
+ } else if (diffGiorni === 1) { 
+ el.textContent = "ieri"; 
+ } else { 
+ el.textContent = `${diffGiorni} giorni fa`; 
+ } 
+ }); 
+ } 
+ updateRelativeTimes(); 
+ setInterval(updateRelativeTimes, 60000); // Aggiorna ogni minuto 
+ 
  // 1. AUTO SCROLL NOTIZIE 
  let currentSlide = 0; 
  const slides = document.querySelectorAll('.news-slide'); 
@@ -858,29 +1209,16 @@
  if(viewId === 'view-calendario') { 
  renderCalendar(); 
  } 
+ if(viewId === 'view-archivio') { 
+ if(typeof window.caricaArchivioAppunti === 'function') window.caricaArchivioAppunti(); 
+ } 
  } 
  
  // 4. FILTRO LIVE DEL MARKETPLACE (TESTO + PREZZO) 
  function filterMarketplace() { 
- const query = document.getElementById('marketSearch').value.toLowerCase(); 
- const maxPrice = parseFloat(document.getElementById('marketPriceMax').value) || Infinity; 
-  
- const items = document.querySelectorAll('.market-card-grid'); 
-  
- items.forEach(item => { 
- const title = item.getAttribute('data-title').toLowerCase(); 
- const author = item.getAttribute('data-author').toLowerCase(); 
- const price = parseFloat(item.getAttribute('data-price')); 
-  
- const matchesText = title.includes(query) || author.includes(query); 
- const matchesPrice = price <= maxPrice; 
-  
- if(matchesText && matchesPrice) { 
- item.style.display = 'flex'; 
- } else { 
- item.style.display = 'none'; 
+ if(typeof window.filterMarketplace === 'function') { 
+ return window.filterMarketplace(); 
  } 
- }); 
  } 
  
  // 5. CAMBIO COLORE REALE CON INIEZIONE NELLE VARIABILI ROOT 
@@ -1029,9 +1367,20 @@
  const SUPABASE_URL = "https://kijgeyfhvvrmriwpvebm.supabase.co"; 
  const SUPABASE_KEY = "sb_publishable_5WJ5tNUj_NpdfbdQAIiVWQ_KPXYc_VM"; 
  const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null; 
+ 
+ // 1. GESTIONE DEVICE_ID 
+ function getDeviceId() { 
+ let id = localStorage.getItem('lista2_device_id'); 
+ if (!id) { 
+ id = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); 
+ localStorage.setItem('lista2_device_id', id); 
+ } 
+ return id; 
+ } 
+ const deviceId = getDeviceId(); 
+ 
  const gradientiDomande = ['orange-gradient', 'red-gradient', 'purple-gradient', 'blue-gradient', 'green-gradient']; 
- const likedStorageKey = 'lista2_liked_posts'; 
- let likedPosts = new Set(JSON.parse(localStorage.getItem(likedStorageKey) || '[]').map(Number)); 
+ let likedPosts = new Set(); 
  let selectedQuestionGradient = 'orange-gradient'; 
  let questionViewerIndex = 0; 
  const defaultQuestions = [ 
@@ -1047,11 +1396,9 @@
  navigateOriginale(viewId, navButton, titleText); 
  if(viewId === 'view-all-questions') renderQuestionViewer(); 
  if(viewId === 'view-add-question') updateQuestionPreview(); 
+ if(viewId === 'view-votazioni') window.caricaVotazioniEGrafico(); 
+ if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni(); 
  }; 
- } 
- 
- function salvaLikeLocali() { 
- localStorage.setItem(likedStorageKey, JSON.stringify(Array.from(likedPosts))); 
  } 
  
  function updateLikeCount(postId, count) { 
@@ -1064,55 +1411,58 @@
  } 
  
  async function caricaLikePost() { 
- document.querySelectorAll('.like-btn[data-post-id]').forEach(button => { 
- const postId = Number(button.dataset.postId); 
- if(likedPosts.has(postId)) button.classList.add('liked'); 
- else button.classList.remove('liked'); 
- }); 
  if(!db) return; 
- const postIds = Array.from(document.querySelectorAll('.like-btn[data-post-id]')).map(button => Number(button.dataset.postId)); 
- const { data, error } = await db.from('post_likes').select('post_id, likes_count').in('post_id', postIds); 
- if(error) return; 
- const presenti = new Set((data || []).map(row => Number(row.post_id))); 
- (data || []).forEach(row => updateLikeCount(row.post_id, row.likes_count)); 
- for(const button of document.querySelectorAll('.like-btn[data-post-id]')) { 
+ const postButtons = document.querySelectorAll('.like-btn[data-post-id]'); 
+  
+ // 1. Ottieni tutti i like per contare e verificare l'utente attuale 
+ const { data: allLikes, error: errLikes } = await db.from('post_likes').select('post_id, device_id'); 
+ if(errLikes) return console.error("Errore caricamento like:", errLikes); 
+  
+ // 2. Filtra i like dell'utente attuale 
+ likedPosts = new Set(allLikes.filter(l => l.device_id === deviceId).map(l => Number(l.post_id))); 
+  
+ // 3. Conta i like per ogni post e aggiorna il DOM 
+ postButtons.forEach(button => { 
  const postId = Number(button.dataset.postId); 
  const defaultLikes = Number(button.dataset.defaultLikes || 0); 
- if(!presenti.has(postId)) { 
- await db.from('post_likes').upsert({ post_id: postId, likes_count: defaultLikes }, { onConflict: 'post_id' }); 
- updateLikeCount(postId, defaultLikes); 
- } 
- } 
+ const dbLikesCount = allLikes.filter(l => Number(l.post_id) === postId).length; 
+ updateLikeCount(postId, dbLikesCount + defaultLikes); 
+ }); 
  } 
  
  window.toggleLike = async function(button) { 
  const postId = Number(button.dataset.postId); 
  if(!postId) return; 
+  
  const wasLiked = likedPosts.has(postId); 
  const delta = wasLiked ? -1 : 1; 
+  
+ // Aggiornamento DOM Istantaneo 
  const countSpan = button.querySelector('.like-count'); 
  const countAttuale = parseInt(countSpan.textContent, 10) || 0; 
- const conteggioProvvisorio = Math.max(0, countAttuale + delta); 
  if(wasLiked) likedPosts.delete(postId); 
  else likedPosts.add(postId); 
- salvaLikeLocali(); 
- updateLikeCount(postId, conteggioProvvisorio); 
+ updateLikeCount(postId, Math.max(0, countAttuale + delta)); 
+  
  if(!db) return; 
- const { data } = await db.from('post_likes').select('likes_count').eq('post_id', postId).maybeSingle(); 
- const baseCount = data ? Number(data.likes_count || 0) : countAttuale; 
- const nuovoTotale = Math.max(0, baseCount + delta); 
- const query = data 
- ? db.from('post_likes').update({ likes_count: nuovoTotale }).eq('post_id', postId) 
- : db.from('post_likes').insert({ post_id: postId, likes_count: nuovoTotale }); 
- const { error } = await query; 
+  
+ if(wasLiked) { 
+ // Rimuovi il like 
+ const { error } = await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId); 
  if(error) { 
- if(wasLiked) likedPosts.add(postId); 
- else likedPosts.delete(postId); 
- salvaLikeLocali(); 
+ likedPosts.add(postId); 
  updateLikeCount(postId, countAttuale); 
- return; 
  } 
- updateLikeCount(postId, nuovoTotale); 
+ } else { 
+ // Aggiungi il like 
+ const { error } = await db.from('post_likes').insert({ post_id: postId, device_id: deviceId }); 
+ if(error) { 
+ // Se fallisce (es. già presente), proviamo a rimuoverlo (toggle) 
+ await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId); 
+ likedPosts.delete(postId); 
+ updateLikeCount(postId, countAttuale); 
+ } 
+ } 
  }; 
  
  function creaCardDomanda(domanda) { 
@@ -1293,6 +1643,214 @@
  navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2'); 
  }; 
  
+ window.inviaPropostaAssemblea = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const titolo = document.getElementById('propostaTitolo').value.trim(); 
+ const descrizione = document.getElementById('propostaDescrizione').value.trim(); 
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!'); 
+ const { error } = await db.from('proposte_assemblee').insert({ titolo, descrizione }); 
+ if(error) return alert("Errore nell'invio della proposta."); 
+ alert('Proposta inviata con successo!'); 
+ document.getElementById('propostaTitolo').value = ''; 
+ document.getElementById('propostaDescrizione').value = ''; 
+ navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE'); 
+ }; 
+ 
+ window.updateFileNameDisplay = function(input) { 
+ const display = document.getElementById('fileNameDisplay'); 
+ if(input.files && input.files[0]) { 
+ display.textContent = "File selezionato: " + input.files[0].name; 
+ display.style.color = "var(--accent-color)"; 
+ display.style.fontWeight = "bold"; 
+ } else { 
+ display.textContent = "Seleziona un file (PDF, Immagine...)"; 
+ display.style.color = "#64748b"; 
+ display.style.fontWeight = "normal"; 
+ } 
+ }; 
+ 
+ window.downloadFile = async function(fileDati, nomeFile) { 
+ if(!db) return; 
+  
+ const modal = document.getElementById('downloadModal'); 
+ const fileNameText = document.getElementById('downloadFileName'); 
+ const progressBar = document.getElementById('downloadProgressBar'); 
+ const progressText = document.getElementById('downloadProgressText'); 
+  
+ fileNameText.textContent = nomeFile; 
+ modal.style.display = 'flex'; 
+ progressBar.style.width = '0%'; 
+ progressText.textContent = '0%'; 
+  
+ try { 
+ // Simulazione caricamento con progresso per il download 
+ for (let p = 0; p <= 100; p += 5) { 
+ progressBar.style.width = p + '%'; 
+ progressText.textContent = p + "%"; 
+ await new Promise(r => setTimeout(r, 100)); 
+ } 
+  
+ // Download effettivo tramite URL pubblico dello Storage 
+ if(fileDati && !fileDati.startsWith('static/')) { 
+ const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati); 
+ const publicUrl = data.publicUrl; 
+ 
+ // FIX PER SMARTPHONE: Creazione link senza target="_blank" per evitare i blocchi e fallback per iOS
+ const link = document.createElement('a'); 
+ link.href = publicUrl; 
+ link.download = nomeFile; 
+ document.body.appendChild(link); 
+ link.click(); 
+ document.body.removeChild(link); 
+ 
+ // Fallback aggiuntivo per forzare l'apertura se il download silently fails su iOS
+ setTimeout(() => { window.location.href = publicUrl; }, 150);
+ } else { 
+ alert("Download del file statico: " + nomeFile); 
+ } 
+  
+ setTimeout(() => { 
+ modal.style.display = 'none'; 
+ }, 500); 
+  
+ } catch (err) { 
+ modal.style.display = 'none'; 
+ alert("Errore durante il download."); 
+ } 
+ }; 
+ 
+ window.inviaAppunti = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const materia = document.getElementById('appuntiMateria').value.trim(); 
+ const argomento = document.getElementById('appuntiArgomento').value.trim(); 
+ const docente = document.getElementById('appuntiDocente').value.trim(); 
+ const note = document.getElementById('appuntiNote').value.trim(); 
+ const fileInput = document.getElementById('appuntiFile'); 
+  
+ if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!'); 
+ if(!fileInput.files || !fileInput.files[0]) return alert('Seleziona un file da caricare!'); 
+  
+ const file = fileInput.files[0]; 
+ const nome_file = file.name; 
+  
+ // UI Progress 
+ const progressContainer = document.getElementById('uploadProgressContainer'); 
+ const progressBar = document.getElementById('uploadProgressBar'); 
+ const progressText = document.getElementById('uploadProgressText'); 
+ const btnInvia = document.getElementById('btnInviaAppunti'); 
+  
+ progressContainer.style.display = 'block'; 
+ btnInvia.disabled = true; 
+ btnInvia.style.opacity = '0.5'; 
+  
+ // Step 1: Upload del file nello Storage 
+ const nomeUnico = Date.now() + "_" + nome_file; 
+ progressBar.style.width = '30%'; 
+ progressText.textContent = "Caricamento nello Storage..."; 
+  
+ const { data: storageData, error: storageError } = await db 
+ .storage 
+ .from('archivio_pdf') 
+ .upload(nomeUnico, file); 
+  
+ if (storageError) { 
+ progressContainer.style.display = 'none'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+ return alert("Errore nello Storage: " + storageError.message); 
+ } 
+  
+ const file_dati = storageData.path; 
+  
+ progressBar.style.width = '70%'; 
+ progressText.textContent = "Salvataggio nel Database..."; 
+  
+ const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file }); 
+ if(error) return alert("Errore nel caricamento degli appunti."); 
+  
+ alert('Appunti caricati con successo!'); 
+ // Reset UI 
+ progressContainer.style.display = 'none'; 
+ progressBar.style.width = '0%'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+  
+ // Reset campi 
+ document.getElementById('appuntiMateria').value = ''; 
+ document.getElementById('appuntiArgomento').value = ''; 
+ document.getElementById('appuntiDocente').value = ''; 
+ document.getElementById('appuntiNote').value = ''; 
+ fileInput.value = ''; 
+ document.getElementById('fileNameDisplay').textContent = "Seleziona un file (PDF, Immagine...)"; 
+  
+ await window.caricaArchivioAppunti(); 
+ navigateTo('view-archivio', null, 'DRIVE APPUNTI'); 
+ }; 
+ 
+ function escapeHTML(str) { 
+ if(!str) return ""; 
+ return str.replace(/[&<>"']/g, function(m) { 
+ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; 
+ }); 
+ } 
+ 
+ function creaCardAppunto(appunto) { 
+ const card = document.createElement('div'); 
+ card.className = 'note-card archive-item-dynamic'; 
+ card.style.cursor = 'pointer'; 
+ card.setAttribute('data-materia', (appunto.materia || '').toLowerCase()); 
+ card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase()); 
+ card.setAttribute('data-docente', (appunto.docente || '').toLowerCase()); 
+  
+ card.innerHTML = ` 
+ <div class="note-icon"> 
+ <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> 
+ </div> 
+ <div class="note-info"> 
+ <h4>${escapeHTML(appunto.materia)}</h4> 
+ <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p> 
+ ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''} 
+ <div class="note-meta">Caricato da uno studente</div> 
+ </div> 
+ <div class="note-download-icon" style="flex-shrink:0; margin-left:8px;"> 
+ <svg viewBox="0 0 24 24" width="20" height="20" fill="#94a3b8"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 
+ </div> 
+ `; 
+  
+ card.onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file); 
+ return card; 
+ } 
+ 
+ window.caricaArchivioAppunti = async function() { 
+ if(!db) return; 
+ const { data, error } = await db.from('archivio_appunti').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+ const dynamicList = document.getElementById('archiveDynamicList'); 
+ if(dynamicList) { 
+ dynamicList.innerHTML = ''; 
+ (data || []).forEach(appunto => { 
+ dynamicList.appendChild(creaCardAppunto(appunto)); 
+ }); 
+ } 
+ if(typeof window.filterArchive === 'function') window.filterArchive(); 
+ }; 
+ 
+ window.filterArchive = function() { 
+ const query = (document.getElementById('archiveSearch')?.value || '').toLowerCase(); 
+  
+ // Filtra elementi dinamici 
+ document.querySelectorAll('.archive-item-dynamic').forEach(item => { 
+ const materia = item.getAttribute('data-materia') || ''; 
+ const argomento = item.getAttribute('data-argomento') || ''; 
+ const docente = item.getAttribute('data-docente') || ''; 
+ if(materia.includes(query) || argomento.includes(query) || docente.includes(query)) { 
+ item.style.display = 'flex'; 
+ } else { 
+ item.style.display = 'none'; 
+ } 
+ }); 
+ }; 
+ 
  window.filterMarketplace = function() { 
  const searchInput = document.getElementById('marketSearch'); 
  const priceInput = document.getElementById('marketPriceMax'); 
@@ -1307,20 +1865,12 @@
  }); 
  }; 
  
- function attivaRealtime() { 
- if(!db) return; 
- db.channel('lista2-realtime') 
- .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande()) 
- .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace()) 
- .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, payload => { 
- if(payload.new) updateLikeCount(payload.new.post_id, payload.new.likes_count); 
- }) 
- .subscribe(); 
- } 
- 
- Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace()]).then(attivaRealtime); 
- })(); 
- </script> 
- 
-</body> 
+ window.apriIscrizioneTorneoStatico = function(nomeTorneo) { 
+ document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo; 
+ window.currentTorneoNome = nomeTorneo; 
+ document.getElementById('ruoloTorneoSezione').style.display = 'block'; 
+ navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO'); 
+ }; 
+ </script>
+</body>
 </html>
