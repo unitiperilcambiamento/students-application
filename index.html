@@ -982,15 +982,6 @@
  </div>
  </div>
 
- <div id="view-visualizza-file" class="app-view">
- <div class="view-title-banner">
- <span id="visualizzaFileTitolo">Visualizza File</span>
- <span class="back-link" onclick="navigateTo('view-archivio', null, 'DRIVE APPUNTI')">&#8592; Indietro</span>
- </div>
- <div class="section-container" style="height: calc(100vh - 250px); padding: 0;">
- <iframe id="fileViewerIframe" style="width: 100%; height: 100%; border: none; border-radius: 12px;"></iframe>
- </div>
- </div>
 
  <div id="view-carica-appunti" class="app-view">
  <div class="view-title-banner">
@@ -1592,11 +1583,7 @@
  if(fileDati && !fileDati.startsWith('static/')) {
  const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
  const publicUrl = data.publicUrl;
-
- // Visualizza il file nell'iframe invece di aprirlo in una nuova scheda
- document.getElementById('visualizzaFileTitolo').textContent = nomeFile;
- document.getElementById('fileViewerIframe').src = publicUrl;
- navigateTo('view-visualizza-file', null, 'VISUALIZZA FILE');
+ window.open(publicUrl, '_blank');
  } else {
  alert("Download del file statico: " + nomeFile);
  }
@@ -1689,6 +1676,7 @@
  function creaCardAppunto(appunto) {
  const card = document.createElement('div');
  card.className = 'note-card archive-item-dynamic';
+ card.style.cursor = 'pointer';
  card.setAttribute('data-materia', (appunto.materia || '').toLowerCase());
  card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase());
  card.setAttribute('data-docente', (appunto.docente || '').toLowerCase());
@@ -1703,10 +1691,9 @@
  ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''}
  <div class="note-meta">Caricato da uno studente</div>
  </div>
- <span class="download-arrow" style="cursor:pointer;">➔</span>
  `;
 
- card.querySelector('.download-arrow').onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file);
+ card.onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file);
  return card;
  }
 
