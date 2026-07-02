@@ -956,7 +956,7 @@
  <input type="text" id="iscrizioneClasse" class="filter-input" placeholder="La tua Classe">
  <input type="email" id="iscrizioneEmail" class="filter-input" placeholder="La tua Email">
 
- <div style="margin-top: 10px;">
+ <div id="ruoloTorneoSezione" style="margin-top: 10px;">
  <p style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px;">Ti stai iscrivendo come:</p>
  <div style="display: flex; gap: 20px;">
  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;">
@@ -979,6 +979,16 @@
  </div>
 
  <button onclick="inviaIscrizioneTorneo()" class="answer-send-btn" style="margin-top: 20px;">Invia iscrizione</button>
+ </div>
+ </div>
+
+ <div id="view-visualizza-file" class="app-view">
+ <div class="view-title-banner">
+ <span id="visualizzaFileTitolo">Visualizza File</span>
+ <span class="back-link" onclick="navigateTo('view-archivio', null, 'DRIVE APPUNTI')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container" style="height: calc(100vh - 250px); padding: 0;">
+ <iframe id="fileViewerIframe" style="width: 100%; height: 100%; border: none; border-radius: 12px;"></iframe>
  </div>
  </div>
 
@@ -1583,8 +1593,10 @@
  const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
  const publicUrl = data.publicUrl;
 
- // Metodo window.open per massima compatibilità mobile
- window.open(publicUrl, '_blank');
+ // Visualizza il file nell'iframe invece di aprirlo in una nuova scheda
+ document.getElementById('visualizzaFileTitolo').textContent = nomeFile;
+ document.getElementById('fileViewerIframe').src = publicUrl;
+ navigateTo('view-visualizza-file', null, 'VISUALIZZA FILE');
  } else {
  alert("Download del file statico: " + nomeFile);
  }
@@ -1745,6 +1757,17 @@
  window.apriIscrizioneTorneoStatico = function(nomeTorneo) {
  document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo;
  window.currentTorneoNome = nomeTorneo;
+
+ // Se è pallavolo, nascondiamo la sezione ruolo (capitano/spettatore)
+ const ruoloSezione = document.getElementById('ruoloTorneoSezione');
+ if(nomeTorneo === 'Pallavolo') {
+ ruoloSezione.style.display = 'none';
+ document.querySelector('input[name="ruoloTorneo"][value="spettatore"]').checked = true;
+ window.toggleSezioneCapitano(false);
+ } else {
+ ruoloSezione.style.display = 'block';
+ }
+
  navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO');
  };
 
