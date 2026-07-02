@@ -12,6 +12,7 @@
  <meta name="apple-mobile-web-app-title" content="Lista 2">
  <meta name="mobile-web-app-capable" content="yes">
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
  <style>
  /* ==========================================================================
@@ -284,7 +285,7 @@
  .question-arrow.next { right: -17px; }
  .answer-bubble { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; transition: transform 0.2s; }
  .answer-bubble:active { transform: translate(-50%, -50%) scale(0.9); }
- .question-counter { text-align: center; margin-top: -54px; margin-bottom: 12px; color: #64748b; font-size: 12px; font-weight: 700; }
+ .question-counter { text-align: center; margin-top: 20px; margin-bottom: 20px; color: #64748b; font-size: 12px; font-weight: 700; }
  .question-answer-pocket { display: none; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); flex-direction: column; gap: 10px; }
  .question-answer-pocket.active { display: flex; animation: smoothFade 0.4s; }
  .question-answer-pocket textarea { min-height: 82px; resize: none; }
@@ -447,6 +448,20 @@
   color: #64748b;
   margin-bottom: 20px;
  }
+
+ .voting-proposals-container { display: flex; flex-direction: column; gap: 16px; }
+ .voting-card { background: white; border-radius: 18px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+ .voting-info { flex-grow: 1; }
+ .voting-info h4 { font-size: 14px; color: #0f172a; font-weight: 700; margin-bottom: 4px; }
+ .voting-info p { font-size: 12px; color: #64748b; line-height: 1.4; }
+ .vota-btn { background: var(--accent-color); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+ .vota-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #94a3b8; }
+ .chart-wrapper { width: 100%; max-width: 280px; margin: 0 auto; padding: 10px 0; }
+ .archive-vote-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; }
+ .archive-vote-header { display: flex; justify-content: space-between; align-items: center; }
+ .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; }
+ .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+ .archive-vote-details { font-size: 11.5px; color: #64748b; }
  </style>
 </head>
 <body>
@@ -606,18 +621,6 @@
  <button class="add-question-btn" onclick="navigateTo('view-add-question', this, 'FAI UNA DOMANDA')">+</button>
  </div>
  </div>
- <div class="ngl-card">
- <div class="ngl-header red-gradient">Anonimo</div>
- <div class="ngl-body">
- <p class="question-text">Quali sono le proposte principali per strutturare le assemblee?</p>
- </div>
- </div>
- <div class="ngl-card">
- <div class="ngl-header purple-gradient">Anonimo</div>
- <div class="ngl-body">
- <p class="question-text">Riusciremo ad avere sconti reali anche per i libri scolastici?</p>
- </div>
- </div>
  <div id="domandeDynamicHome" style="display: contents;"></div>
  </div>
  </section>
@@ -637,31 +640,36 @@
  </div>
  </div>
 
- <div class="market-card-scroll">
- <div class="market-info-scroll">
- <h4>Le basi della fisica</h4>
- <span class="market-author-scroll">Francesco Cerri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll">
- <div class="market-info-scroll">
- <h4>Ripetizioni Matematica</h4>
- <span class="market-author-scroll">Elena Gatti (5°B)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
  <div id="marketDynamicHome" style="display: contents;"></div>
  </div>
  </section>
 
+
+ <!-- SEZIONE PROPOSTE E VOTAZIONI -->
+ <section class="section-container">
+ <h2 class="section-title-margin">Proposte e Votazioni</h2>
+ <div class="collab-scroll-container">
+
+ <div class="tournament-card" onclick="navigateTo('view-invia-proposta', null, 'INVIA UNA PROPOSTA')">
+ <h3>Invia una Proposta</h3>
+ <p>Condividi le tue idee per migliorare la nostra scuola.</p>
+ <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span>
+ </div>
+
+ <div class="tournament-card" onclick="navigateTo('view-votazioni', null, 'VOTAZIONI')">
+ <h3>Votazioni Attive</h3>
+ <p>Partecipa alle votazioni in corso e guarda i risultati.</p>
+ <span class="tournament-tag">Vota ora</span>
+ </div>
+
+ <div class="tournament-card" onclick="navigateTo('view-archivio-storico-votazioni', null, 'ARCHIVIO VOTAZIONI')">
+ <h3>Archivio Votazioni</h3>
+ <p>Scopri i risultati delle scorse edizioni e delle proposte approvate.</p>
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">Storico</span>
+ </div>
+
+ </div>
+ </section>
 
  <!-- SEZIONE TORNEI -->
  <section class="section-container">
@@ -731,51 +739,6 @@
 
  <!-- Griglia Prodotti Filtrabili -->
  <div class="market-grid-container" id="gridMarketplace">
-
- <div class="market-card-scroll market-card-grid" data-title="Le basi della fisica" data-author="Francesco Cerri" data-price="35">
- <div class="market-info-scroll">
- <h4>Le basi della fisica</h4>
- <span class="market-author-scroll">Francesco Cerri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Matematica" data-author="Elena Gatti (5°B)" data-price="12">
- <div class="market-info-scroll">
- <h4>Ripetizioni Matematica</h4>
- <span class="market-author-scroll">Elena Gatti (5°B)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Compendio Storia" data-author="Alessandro Neri" data-price="18">
- <div class="market-info-scroll">
- <h4>Compendio Storia</h4>
- <span class="market-author-scroll">Alessandro Neri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">18€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Chimica" data-author="Marco Polo (4°A)" data-price="15">
- <div class="market-info-scroll">
- <h4>Ripetizioni Chimica</h4>
- <span class="market-author-scroll">Marco Polo (4°A)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">15€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
-
  <div id="marketDynamicList" style="display: contents;"></div>
  </div>
  </div>
@@ -924,6 +887,54 @@
  <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)">
  <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea>
  <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: INVIA UNA PROPOSTA (VOTAZIONE) ================= -->
+ <div id="view-invia-proposta" class="app-view">
+ <div class="view-title-banner">
+ <span>Invia una Proposta</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p>
+ <input type="text" id="votazioneTitolo" class="filter-input" placeholder="Titolo della proposta">
+ <select id="votazioneCategoria" class="filter-input">
+ <option value="Evento">Evento</option>
+ <option value="Servizio">Servizio</option>
+ <option value="Miglioria">Miglioria</option>
+ <option value="Altro">Altro</option>
+ </select>
+ <textarea id="votazioneDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea>
+ <button onclick="inviaPropostaVotazione()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: VOTAZIONI ================= -->
+ <div id="view-votazioni" class="app-view">
+ <div class="view-title-banner">
+ <span>Votazioni</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container">
+ <div class="voting-proposals-container" id="proposteAttiveList">
+ <!-- Caricate dinamicamente -->
+ </div>
+
+ <div class="chart-wrapper" style="margin-top: 30px;">
+ <canvas id="votingChart"></canvas>
+ </div>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: ARCHIVIO STORICO VOTAZIONI ================= -->
+ <div id="view-archivio-storico-votazioni" class="app-view">
+ <div class="view-title-banner">
+ <span>Archivio Votazioni</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container" id="archivioVotazioniList">
+ <!-- Caricato dinamicamente -->
  </div>
  </div>
 
@@ -1296,12 +1307,7 @@
  let likedPosts = new Set();
  let selectedQuestionGradient = 'orange-gradient';
  let questionViewerIndex = 0;
- const defaultQuestions = [
- { testo: 'Quali sono le proposte principali per strutturare le assemblee?', gradiente: 'red-gradient' },
- { testo: 'Riusciremo ad avere sconti reali anche per i libri scolastici?', gradiente: 'purple-gradient' },
- { testo: "Verranno organizzati tornei sportivi d'istituto?", gradiente: 'blue-gradient' },
- { testo: 'Come possiamo proporre nuovi partner per le convenzioni?', gradiente: 'orange-gradient' }
- ];
+ const defaultQuestions = [];
  let allQuestionsData = [...defaultQuestions];
  const navigateOriginale = window.navigateTo;
  if(typeof navigateOriginale === 'function') {
@@ -1309,6 +1315,8 @@
  navigateOriginale(viewId, navButton, titleText);
  if(viewId === 'view-all-questions') renderQuestionViewer();
  if(viewId === 'view-add-question') updateQuestionPreview();
+ if(viewId === 'view-votazioni') window.caricaVotazioniEGrafico();
+ if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni();
  };
  }
 
@@ -1861,6 +1869,145 @@
  navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
  };
 
+ let votingChart = null;
+
+ window.inviaPropostaVotazione = async function() {
+ if(!db) return alert('Connessione a Supabase non disponibile.');
+ const titolo = document.getElementById('votazioneTitolo').value.trim();
+ const descrizione = document.getElementById('votazioneDescrizione').value.trim();
+ const categoria = document.getElementById('votazioneCategoria').value;
+
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!');
+
+ const { error } = await db.from('proposte_votazione').insert({
+ titolo,
+ descrizione,
+ categoria
+ });
+
+ if(error) return alert("Errore nell'invio della proposta.");
+
+ alert('Proposta inviata con successo! Verrà esaminata dai rappresentanti.');
+ document.getElementById('votazioneTitolo').value = '';
+ document.getElementById('votazioneDescrizione').value = '';
+ navigateTo('view-votazioni', null, 'VOTAZIONI');
+ };
+
+ window.caricaVotazioniEGrafico = async function() {
+ if(!db) return;
+
+ // 1. Recupera proposte attive
+ const { data: proposte, error: errProp } = await db.from('proposte_votazione').select('*');
+ if(errProp) return console.error("Errore proposte:", errProp);
+
+ // 2. Recupera tutti i voti per verificare se l'utente ha votato (Regola: un solo voto in totale)
+ const { data: voti, error: errVoti } = await db.from('voti_proposte').select('*');
+ if(errVoti) return console.error("Errore voti:", errVoti);
+
+ const container = document.getElementById('proposteAttiveList');
+ if(!container) return;
+ container.innerHTML = '';
+
+ const labels = [];
+ const counts = [];
+
+ // Verifica se l'utente ha già votato una qualsiasi proposta
+ const hasVotedAny = voti.some(v => v.device_id === deviceId);
+
+ proposte.forEach(p => {
+ const numVoti = voti.filter(v => v.proposta_id === p.id).length;
+ labels.push(p.titolo);
+ counts.push(numVoti);
+
+ const card = document.createElement('div');
+ card.className = 'voting-card';
+
+ // Se l'utente ha votato QUESTA proposta specifica
+ const votedThis = voti.some(v => v.device_id === deviceId && v.proposta_id === p.id);
+
+ card.innerHTML = `
+ <div class="voting-info">
+ <h4>${escapeHTML(p.titolo)}</h4>
+ <p>${escapeHTML(p.descrizione || '')}</p>
+ </div>
+ <button class="vota-btn" ${hasVotedAny ? 'disabled' : ''} onclick="inviaVoto(${p.id})">
+ ${votedThis ? 'Votato' : (hasVotedAny ? 'Chiuso' : 'Vota')}
+ </button>
+ `;
+ container.appendChild(card);
+ });
+
+ const ctx = document.getElementById('votingChart');
+ if (ctx) updateChart(labels, counts);
+ };
+
+ function updateChart(labels, data) {
+ const ctx = document.getElementById('votingChart').getContext('2d');
+ if(votingChart) {
+ votingChart.data.labels = labels;
+ votingChart.data.datasets[0].data = data;
+ votingChart.update();
+ } else {
+ votingChart = new Chart(ctx, {
+ type: 'doughnut',
+ data: {
+ labels: labels,
+ datasets: [{
+ data: data,
+ backgroundColor: ['#17427a', '#3b82f6', '#93c5fd', '#60a5fa', '#2563eb'],
+ borderWidth: 0
+ }]
+ },
+ options: {
+ rotation: -90,
+ circumference: 180,
+ cutout: '70%',
+ plugins: {
+ legend: { position: 'bottom' }
+ }
+ }
+ });
+ }
+ }
+
+ window.inviaVoto = async function(propostaId) {
+ if(!db) return;
+
+ const { data: check } = await db.from('voti_proposte').select('id').eq('device_id', deviceId).maybeSingle();
+ if(check) return alert('Hai già espresso il tuo unico voto disponibile!');
+
+ const { error } = await db.from('voti_proposte').insert({ proposta_id: propostaId, device_id: deviceId });
+ if(error) {
+ alert('Errore durante l\'invio del voto.');
+ return;
+ }
+ window.caricaVotazioniEGrafico();
+ };
+
+ window.caricaArchivioVotazioni = async function() {
+ if(!db) return;
+ const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false });
+ if(error) return;
+
+ const container = document.getElementById('archivioVotazioniList');
+ if(!container) return;
+ container.innerHTML = '';
+
+ data.forEach(item => {
+ const card = document.createElement('div');
+ card.className = 'archive-vote-card';
+ card.innerHTML = `
+ <div class="archive-vote-header">
+ <h4>${escapeHTML(item.titolo)}</h4>
+ <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span>
+ </div>
+ <div class="archive-vote-details">
+ Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong>
+ </div>
+ `;
+ container.appendChild(card);
+ });
+ };
 
  function attivaRealtime() {
  if(!db) return;
@@ -1869,6 +2016,7 @@
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost())
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'voti_proposte' }, () => window.caricaVotazioniEGrafico())
  .subscribe();
  }
 
@@ -1878,7 +2026,9 @@
  { name: 'Like', fn: caricaLikePost },
  { name: 'Domande', fn: window.caricaDomande },
  { name: 'Marketplace', fn: window.caricaMarketplace },
- { name: 'Archivio Appunti', fn: window.caricaArchivioAppunti }
+ { name: 'Archivio Appunti', fn: window.caricaArchivioAppunti },
+ { name: 'Votazioni', fn: window.caricaVotazioniEGrafico },
+ { name: 'Storico Votazioni', fn: window.caricaArchivioVotazioni }
  ];
 
  for (const task of tasks) {
