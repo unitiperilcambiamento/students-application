@@ -496,15 +496,15 @@
  <h3 class="author-name">Federico Rossi</h3>
  <span class="author-role">Rappresentante d'Istituto</span>
  </div>
- <span class="post-date">12:30</span>
+ <span class="post-date" data-timestamp="2026-07-02T11:45:00">12:30</span>
  </div>
  <div class="post-content">
  <p>Ciao a tutti! Vi ricordo che venerdì alle 11 ci sarà l'assemblea studentesca generale in aula magna per raccogliere idee sulle proposte del prossimo trimestre. Passate parola!</p>
  </div>
  <div class="post-actions-bar">
- <button class="action-btn like-btn" data-post-id="1" data-default-likes="34" onclick="toggleLike(this)">
+ <button class="action-btn like-btn" data-post-id="1" data-default-likes="0" onclick="toggleLike(this)">
  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
- <span class="like-count">34</span>
+ <span class="like-count">0</span>
  </button>
  </div>
  </div>
@@ -514,15 +514,15 @@
  <h3 class="author-name">Marco Bianchi</h3>
  <span class="author-role">Rappresentante d'Istituto</span>
  </div>
- <span class="post-date">Ieri</span>
+ <span class="post-date" data-timestamp="2026-07-01T09:00:00">Ieri</span>
  </div>
  <div class="post-content">
  <p>Grandi ragazzi! Abbiamo appena chiuso l'accordo per rinnovare le convenzioni con i principali punti di ristoro vicino alla scuola. Trovate i dettagli subito sotto nelle collaborazioni!</p>
  </div>
  <div class="post-actions-bar">
- <button class="action-btn like-btn" data-post-id="2" data-default-likes="52" onclick="toggleLike(this)">
+ <button class="action-btn like-btn" data-post-id="2" data-default-likes="0" onclick="toggleLike(this)">
  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
- <span class="like-count">52</span>
+ <span class="like-count">0</span>
  </button>
  </div>
  </div>
@@ -1058,6 +1058,33 @@
 
  <!-- SCRIPT LOGICI DI FUNZIONAMENTO -->
  <script>
+ // 0. LOGICA TEMPI RELATIVI PER I POST
+ function updateRelativeTimes() {
+ const now = new Date();
+ document.querySelectorAll('.post-date[data-timestamp]').forEach(el => {
+ const timestamp = new Date(el.dataset.timestamp);
+ const diffMs = now - timestamp;
+ const diffMin = Math.floor(diffMs / 60000);
+ const diffOre = Math.floor(diffMs / 3600000);
+ const diffGiorni = Math.floor(diffMs / 86400000);
+
+ if (diffMin < 60) {
+ // Sotto i 60 minuti: mostra l'orario originale HH:mm
+ const hh = String(timestamp.getHours()).padStart(2, '0');
+ const mm = String(timestamp.getMinutes()).padStart(2, '0');
+ el.textContent = `${hh}:${mm}`;
+ } else if (diffOre < 24) {
+ el.textContent = `${diffOre} ${diffOre === 1 ? 'ora' : 'ore'} fa`;
+ } else if (diffGiorni === 1) {
+ el.textContent = "ieri";
+ } else {
+ el.textContent = `${diffGiorni} giorni fa`;
+ }
+ });
+ }
+ updateRelativeTimes();
+ setInterval(updateRelativeTimes, 60000); // Aggiorna ogni minuto
+
  // 1. AUTO SCROLL NOTIZIE
  let currentSlide = 0;
  const slides = document.querySelectorAll('.news-slide');
