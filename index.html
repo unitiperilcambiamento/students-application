@@ -679,24 +679,27 @@
 
  <!-- SEZIONE PROPOSTE E VOTAZIONI -->
  <section class="section-container">
- <div class="section-header-inline">
- <h2 class="section-title">Votazioni in Corso</h2>
- </div>
- <div class="voting-proposals-container" id="proposteAttiveList">
- <!-- Proposte caricate dinamicamente -->
+ <h2 class="section-title-margin">Proposte e Votazioni</h2>
+ <div class="collab-scroll-container">
+
+ <div class="tournament-card" onclick="navigateTo('view-invia-proposta', null, 'INVIA UNA PROPOSTA')">
+ <h3>Invia una Proposta</h3>
+ <p>Condividi le tue idee per migliorare la nostra scuola.</p>
+ <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span>
  </div>
 
- <div class="chart-wrapper">
- <canvas id="votingChart"></canvas>
+ <div class="tournament-card" onclick="navigateTo('view-votazioni-attive', null, 'VOTAZIONI ATTIVE')">
+ <h3>Votazioni Attive</h3>
+ <p>Partecipa alle votazioni in corso e guarda i risultati.</p>
+ <span class="tournament-tag">Vota ora</span>
  </div>
- </section>
 
- <section class="section-container">
- <div class="section-header-inline">
- <h2 class="section-title">Archivio Idee e Votazioni</h2>
+ <div class="tournament-card" onclick="navigateTo('view-archivio-storico-votazioni', null, 'ARCHIVIO VOTAZIONI')">
+ <h3>Archivio Votazioni</h3>
+ <p>Scopri i risultati delle scorse edizioni e delle proposte approvate.</p>
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">Storico</span>
  </div>
- <div id="archivioVotazioniList">
- <!-- Storico caricato dinamicamente -->
+
  </div>
  </section>
 
@@ -961,6 +964,54 @@
  <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)">
  <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea>
  <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: INVIA UNA PROPOSTA (VOTAZIONE) ================= -->
+ <div id="view-invia-proposta" class="app-view">
+ <div class="view-title-banner">
+ <span>Invia una Proposta</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p>
+ <input type="text" id="nuovaPropostaTitolo" class="filter-input" placeholder="Titolo della proposta">
+ <select id="nuovaPropostaCategoria" class="filter-input">
+ <option value="Evento">Evento</option>
+ <option value="Servizio">Servizio</option>
+ <option value="Miglioria">Miglioria</option>
+ <option value="Altro">Altro</option>
+ </select>
+ <textarea id="nuovaPropostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea>
+ <button onclick="inviaNuovaProposta()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: VOTAZIONI ATTIVE ================= -->
+ <div id="view-votazioni-attive" class="app-view">
+ <div class="view-title-banner">
+ <span>Votazioni Attive</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container">
+ <div class="voting-proposals-container" id="proposteAttiveList">
+ <!-- Caricate dinamicamente -->
+ </div>
+
+ <div class="chart-wrapper" style="margin-top: 30px;">
+ <canvas id="votingChart"></canvas>
+ </div>
+ </div>
+ </div>
+
+ <!-- ================= VISTA: ARCHIVIO STORICO VOTAZIONI ================= -->
+ <div id="view-archivio-storico-votazioni" class="app-view">
+ <div class="view-title-banner">
+ <span>Archivio Votazioni</span>
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
+ </div>
+ <div class="section-container" id="archivioVotazioniList">
+ <!-- Caricato dinamicamente -->
  </div>
  </div>
 
@@ -1345,6 +1396,8 @@
  navigateOriginale(viewId, navButton, titleText);
  if(viewId === 'view-all-questions') renderQuestionViewer();
  if(viewId === 'view-add-question') updateQuestionPreview();
+ if(viewId === 'view-votazioni-attive') window.caricaVotazioniEGrafico();
+ if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni();
  };
  }
 
@@ -1890,6 +1943,29 @@
 
  let votingChart = null;
 
+ window.inviaNuovaProposta = async function() {
+ if(!db) return alert('Connessione a Supabase non disponibile.');
+ const titolo = document.getElementById('nuovaPropostaTitolo').value.trim();
+ const descrizione = document.getElementById('nuovaPropostaDescrizione').value.trim();
+ const categoria = document.getElementById('nuovaPropostaCategoria').value;
+
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!');
+
+ const { error } = await db.from('proposte_votazione').insert({
+ titolo,
+ descrizione,
+ categoria,
+ device_id: deviceId
+ });
+
+ if(error) return alert("Errore nell'invio della proposta.");
+
+ alert('Proposta inviata con successo! Verrà esaminata dai rappresentanti.');
+ document.getElementById('nuovaPropostaTitolo').value = '';
+ document.getElementById('nuovaPropostaDescrizione').value = '';
+ navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
+ };
+
  window.caricaVotazioniEGrafico = async function() {
  if(!db) return;
 
@@ -1897,7 +1973,7 @@
  const { data: proposte, error: errProp } = await db.from('proposte_votazione').select('*');
  if(errProp) return console.error("Errore proposte:", errProp);
 
- // 2. Recupera voti per queste proposte
+ // 2. Recupera tutti i voti per verificare se l'utente ha votato (Regola: un solo voto in totale)
  const { data: voti, error: errVoti } = await db.from('voti_proposte').select('*');
  if(errVoti) return console.error("Errore voti:", errVoti);
 
@@ -1907,7 +1983,9 @@
 
  const labels = [];
  const counts = [];
- const userVotes = new Set(voti.filter(v => v.device_id === deviceId).map(v => v.proposta_id));
+
+ // Verifica se l'utente ha già votato una qualsiasi proposta
+ const hasVotedAny = voti.some(v => v.device_id === deviceId);
 
  proposte.forEach(p => {
  const numVoti = voti.filter(v => v.proposta_id === p.id).length;
@@ -1916,13 +1994,17 @@
 
  const card = document.createElement('div');
  card.className = 'voting-card';
+
+ // Se l'utente ha votato QUESTA proposta specifica
+ const votedThis = voti.some(v => v.device_id === deviceId && v.proposta_id === p.id);
+
  card.innerHTML = `
  <div class="voting-info">
  <h4>${escapeHTML(p.titolo)}</h4>
  <p>${escapeHTML(p.descrizione || '')}</p>
  </div>
- <button class="vota-btn" ${userVotes.has(p.id) ? 'disabled' : ''} onclick="inviaVoto(${p.id})">
- ${userVotes.has(p.id) ? 'Votato' : 'Vota'}
+ <button class="vota-btn" ${hasVotedAny ? 'disabled' : ''} onclick="inviaVoto(${p.id})">
+ ${votedThis ? 'Votato' : (hasVotedAny ? 'Chiuso' : 'Vota')}
  </button>
  `;
  container.appendChild(card);
@@ -1963,10 +2045,17 @@
 
  window.inviaVoto = async function(propostaId) {
  if(!db) return;
+
+ // Verifica locale aggiuntiva (il server lo bloccherà comunque se usiamo un constraint unique su device_id)
+ // Ma l'utente ha chiesto un solo voto in TOTALE tra tutte le proposte.
+ // Se la tabella voti_proposte ha un constraint unique su device_id, allora può votare solo una volta.
+
+ const { data: check } = await db.from('voti_proposte').select('id').eq('device_id', deviceId).maybeSingle();
+ if(check) return alert('Hai già espresso il tuo unico voto disponibile!');
+
  const { error } = await db.from('voti_proposte').insert({ proposta_id: propostaId, device_id: deviceId });
  if(error) {
- if(error.code === '23505') alert('Hai già votato per questa proposta!');
- else alert('Errore durante l\'invio del voto.');
+ alert('Errore durante l\'invio del voto.');
  return;
  }
  window.caricaVotazioniEGrafico();
