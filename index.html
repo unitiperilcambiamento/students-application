@@ -688,7 +688,7 @@
  <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span>
  </div>
 
- <div class="tournament-card" onclick="navigateTo('view-votazioni-attive', null, 'VOTAZIONI ATTIVE')">
+ <div class="tournament-card" onclick="navigateTo('view-votazioni', null, 'VOTAZIONI')">
  <h3>Votazioni Attive</h3>
  <p>Partecipa alle votazioni in corso e guarda i risultati.</p>
  <span class="tournament-tag">Vota ora</span>
@@ -975,22 +975,22 @@
  </div>
  <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
  <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p>
- <input type="text" id="nuovaPropostaTitolo" class="filter-input" placeholder="Titolo della proposta">
- <select id="nuovaPropostaCategoria" class="filter-input">
+ <input type="text" id="votazioneTitolo" class="filter-input" placeholder="Titolo della proposta">
+ <select id="votazioneCategoria" class="filter-input">
  <option value="Evento">Evento</option>
  <option value="Servizio">Servizio</option>
  <option value="Miglioria">Miglioria</option>
  <option value="Altro">Altro</option>
  </select>
- <textarea id="nuovaPropostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea>
- <button onclick="inviaNuovaProposta()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button>
+ <textarea id="votazioneDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea>
+ <button onclick="inviaPropostaVotazione()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button>
  </div>
  </div>
 
- <!-- ================= VISTA: VOTAZIONI ATTIVE ================= -->
- <div id="view-votazioni-attive" class="app-view">
+ <!-- ================= VISTA: VOTAZIONI ================= -->
+ <div id="view-votazioni" class="app-view">
  <div class="view-title-banner">
- <span>Votazioni Attive</span>
+ <span>Votazioni</span>
  <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
  </div>
  <div class="section-container">
@@ -1396,7 +1396,7 @@
  navigateOriginale(viewId, navButton, titleText);
  if(viewId === 'view-all-questions') renderQuestionViewer();
  if(viewId === 'view-add-question') updateQuestionPreview();
- if(viewId === 'view-votazioni-attive') window.caricaVotazioniEGrafico();
+ if(viewId === 'view-votazioni') window.caricaVotazioniEGrafico();
  if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni();
  };
  }
@@ -1943,11 +1943,11 @@
 
  let votingChart = null;
 
- window.inviaNuovaProposta = async function() {
+ window.inviaPropostaVotazione = async function() {
  if(!db) return alert('Connessione a Supabase non disponibile.');
- const titolo = document.getElementById('nuovaPropostaTitolo').value.trim();
- const descrizione = document.getElementById('nuovaPropostaDescrizione').value.trim();
- const categoria = document.getElementById('nuovaPropostaCategoria').value;
+ const titolo = document.getElementById('votazioneTitolo').value.trim();
+ const descrizione = document.getElementById('votazioneDescrizione').value.trim();
+ const categoria = document.getElementById('votazioneCategoria').value;
 
  if(!titolo || !descrizione) return alert('Compila tutti i campi!');
 
@@ -1961,9 +1961,9 @@
  if(error) return alert("Errore nell'invio della proposta.");
 
  alert('Proposta inviata con successo! Verrà esaminata dai rappresentanti.');
- document.getElementById('nuovaPropostaTitolo').value = '';
- document.getElementById('nuovaPropostaDescrizione').value = '';
- navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
+ document.getElementById('votazioneTitolo').value = '';
+ document.getElementById('votazioneDescrizione').value = '';
+ navigateTo('view-votazioni', null, 'VOTAZIONI');
  };
 
  window.caricaVotazioniEGrafico = async function() {
