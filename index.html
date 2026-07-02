@@ -471,7 +471,7 @@
  <!-- HEADER GLOBALE --> 
  <header class="app-header"> 
  <div class="logos-container"> 
- <img src="lista.png" alt="Logo Lista 2" class="header-logo-free"> 
+ <img src="lista.PNG" alt="Logo Lista 2" class="header-logo-free"> 
  <img src="123.png" alt="Logo Scuola" class="header-logo-free"> 
  </div> 
  <h1 class="main-title" id="headerTitle">BENVENUTI SULL'APP<br>DELLA LISTA 2</h1> 
@@ -1683,35 +1683,31 @@
  progressText.textContent = '0%'; 
   
  try { 
- // Simulazione caricamento con progresso per il download 
- for (let p = 0; p <= 100; p += 5) { 
- progressBar.style.width = p + '%'; 
- progressText.textContent = p + "%"; 
- await new Promise(r => setTimeout(r, 100)); 
- } 
-  
- // Download effettivo tramite URL pubblico dello Storage 
+ // 1. Ottieni immediatamente l'URL per bypassare popup blocker su mobile (deve essere sincrono al click) 
+ let downloadUrl = null; 
  if(fileDati && !fileDati.startsWith('static/')) { 
  const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati); 
- const publicUrl = data.publicUrl; 
- 
- // FIX PER SMARTPHONE: Creazione link senza target="_blank" per evitare i blocchi e fallback per iOS
- const link = document.createElement('a'); 
- link.href = publicUrl; 
- link.download = nomeFile; 
- document.body.appendChild(link); 
- link.click(); 
- document.body.removeChild(link); 
- 
- // Fallback aggiuntivo per forzare l'apertura se il download silently fails su iOS
- setTimeout(() => { window.location.href = publicUrl; }, 150);
- } else { 
- alert("Download del file statico: " + nomeFile); 
+ downloadUrl = data.publicUrl; 
+ } 
+  
+ if (!downloadUrl) { 
+ modal.style.display = 'none'; 
+ return alert("File non disponibile o statico: " + nomeFile); 
+ } 
+  
+ // 2. Apri il file IMMEDIATAMENTE (gesture utente) 
+ window.open(downloadUrl, '_blank'); 
+  
+ // 3. Mostra comunque la barra di progresso per feedback visivo 
+ for (let p = 0; p <= 100; p += 10) { 
+ progressBar.style.width = p + '%'; 
+ progressText.textContent = p + "%"; 
+ await new Promise(r => setTimeout(r, 50)); 
  } 
   
  setTimeout(() => { 
  modal.style.display = 'none'; 
- }, 500); 
+ }, 300); 
   
  } catch (err) { 
  modal.style.display = 'none'; 
@@ -1871,6 +1867,268 @@
  document.getElementById('ruoloTorneoSezione').style.display = 'block'; 
  navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO'); 
  }; 
- </script>
-</body>
+ 
+ window.toggleSezioneCapitano = function(show) { 
+ const sezione = document.getElementById('sezioneCapitano'); 
+ sezione.style.display = show ? 'flex' : 'none'; 
+ }; 
+ 
+ window.generaCampiMembri = function(count) { 
+ const container = document.getElementById('containerMembriSquadra'); 
+ container.innerHTML = ''; 
+ const n = parseInt(count) || 0; 
+ if(n > 20) { alert('Massimo 20 membri!'); return; } 
+  
+ for(let i = 1; i <= n; i++) { 
+ const div = document.createElement('div'); 
+ div.style.cssText = "display:flex; flex-direction:column; gap:8px; padding:12px; background:#f8fafc; border-radius:14px; border:1px solid #f1f5f9;"; 
+ div.innerHTML = ` 
+ <p style="font-size:11px; font-weight:800; color:var(--accent-color);">MEMBRO #${i}</p> 
+ <input type="text" class="filter-input membro-nome" placeholder="Nome e Cognome"> 
+ <div style="display:flex; gap:10px;"> 
+ <input type="text" class="filter-input membro-classe" style="flex:1;" placeholder="Classe"> 
+ ${window.currentTorneoNome !== 'Pallavolo' ? `<input type="text" class="filter-input membro-ruolo" style="flex:2;" placeholder="Ruolo">` : ''} 
+ </div> 
+ `; 
+ container.appendChild(div); 
+ } 
+ }; 
+ 
+ window.inviaIscrizioneTorneo = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+  
+ const nome = document.getElementById('iscrizioneNome').value.trim(); 
+ const cognome = document.getElementById('iscrizioneCognome').value.trim(); 
+ const classe = document.getElementById('iscrizioneClasse').value.trim(); 
+ const email = document.getElementById('iscrizioneEmail').value.trim(); 
+ const ruolo = document.querySelector('input[name="ruoloTorneo"]:checked').value; 
+  
+ if(!nome || !cognome || !classe || !email) return alert('Compila tutti i campi personali!'); 
+  
+ let datiIscrizione = { 
+ nome, 
+ cognome, 
+ classe, 
+ email, 
+ tipo_iscrizione: ruolo 
+ }; 
+  
+ if(ruolo === 'capitano') { 
+ const squadraNome = document.getElementById('squadraNome').value.trim(); 
+ if(!squadraNome) return alert('Inserisci il nome della squadra!'); 
+  
+ const membri = []; 
+ document.querySelectorAll('#containerMembriSquadra > div').forEach(div => { 
+ const ruoloInput = div.querySelector('.membro-ruolo'); 
+ membri.push({ 
+ nome: div.querySelector('.membro-nome').value.trim(), 
+ classe: div.querySelector('.membro-classe').value.trim(), 
+ ruolo: ruoloInput ? ruoloInput.value.trim() : '' 
+ }); 
+ }); 
+  
+ datiIscrizione.nome_squadra = squadraNome; 
+ datiIscrizione.numero_membri = membri.length; 
+ datiIscrizione.membri_squadra = membri; 
+ } 
+  
+ const { error } = await db.from('iscrizione_tornei').insert(datiIscrizione); 
+ if(error) return alert("Errore durante l'invio dell'iscrizione: " + error.message); 
+  
+ alert('Iscrizione inviata con successo!'); 
+ // Reset 
+ document.getElementById('iscrizioneNome').value = ''; 
+ document.getElementById('iscrizioneCognome').value = ''; 
+ document.getElementById('iscrizioneClasse').value = ''; 
+ document.getElementById('iscrizioneEmail').value = ''; 
+ document.getElementById('squadraNome').value = ''; 
+ document.getElementById('squadraMembriCount').value = ''; 
+ document.getElementById('containerMembriSquadra').innerHTML = ''; 
+ toggleSezioneCapitano(false); 
+ document.querySelector('input[name="ruoloTorneo"][value="spettatore"]').checked = true; 
+  
+ navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2'); 
+ }; 
+ 
+ let votingChart = null; 
+  
+ window.inviaPropostaVotazione = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const titolo = document.getElementById('votazioneTitolo').value.trim(); 
+ const descrizione = document.getElementById('votazioneDescrizione').value.trim(); 
+ const categoria = document.getElementById('votazioneCategoria').value; 
+  
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!'); 
+  
+ const { error } = await db.from('proposte_votazione').insert({ 
+ titolo, 
+ descrizione, 
+ categoria 
+ }); 
+  
+ if(error) return alert("Errore nell'invio della proposta."); 
+  
+ alert('Proposta inviata con successo! Verrà esaminata dai rappresentanti.'); 
+ document.getElementById('votazioneTitolo').value = ''; 
+ document.getElementById('votazioneDescrizione').value = ''; 
+ navigateTo('view-votazioni', null, 'VOTAZIONI'); 
+ }; 
+  
+ window.caricaVotazioniEGrafico = async function() { 
+ if(!db) return; 
+  
+ // 1. Recupera proposte attive 
+ const { data: proposte, error: errProp } = await db.from('proposte_votazione').select('*'); 
+ if(errProp) return console.error("Errore proposte:", errProp); 
+  
+ // 2. Recupera tutti i voti per verificare se l'utente ha votato (Regola: un solo voto in totale) 
+ const { data: voti, error: errVoti } = await db.from('voti_proposte').select('*'); 
+ if(errVoti) return console.error("Errore voti:", errVoti); 
+  
+ const container = document.getElementById('proposteAttiveList'); 
+ if(!container) return; 
+ container.innerHTML = ''; 
+  
+ const labels = []; 
+ const counts = []; 
+  
+ // Verifica se l'utente ha già votato una qualsiasi proposta 
+ const hasVotedAny = voti.some(v => v.device_id === deviceId); 
+  
+ proposte.forEach(p => { 
+ const numVoti = voti.filter(v => v.proposta_id === p.id).length; 
+ labels.push(p.titolo); 
+ counts.push(numVoti); 
+  
+ const card = document.createElement('div'); 
+ card.className = 'voting-card'; 
+  
+ // Se l'utente ha votato QUESTA proposta specifica 
+ const votedThis = voti.some(v => v.device_id === deviceId && v.proposta_id === p.id); 
+  
+ card.innerHTML = ` 
+ <div class="voting-info"> 
+ <h4>${escapeHTML(p.titolo)}</h4> 
+ <p>${escapeHTML(p.descrizione || '')}</p> 
+ </div> 
+ <button class="vota-btn" ${hasVotedAny ? 'disabled' : ''} onclick="inviaVoto(${p.id})"> 
+ ${votedThis ? 'Votato' : (hasVotedAny ? 'Chiuso' : 'Vota')} 
+ </button> 
+ `; 
+ container.appendChild(card); 
+ }); 
+  
+ const ctx = document.getElementById('votingChart'); 
+ if (ctx) updateChart(labels, counts); 
+ }; 
+  
+ function updateChart(labels, data) { 
+ const ctx = document.getElementById('votingChart').getContext('2d'); 
+ if(votingChart) { 
+ votingChart.data.labels = labels; 
+ votingChart.data.datasets[0].data = data; 
+ votingChart.update(); 
+ } else { 
+ votingChart = new Chart(ctx, { 
+ type: 'doughnut', 
+ data: { 
+ labels: labels, 
+ datasets: [{ 
+ data: data, 
+ backgroundColor: ['#17427a', '#3b82f6', '#93c5fd', '#60a5fa', '#2563eb'], 
+ borderWidth: 0 
+ }] 
+ }, 
+ options: { 
+ rotation: -90, 
+ circumference: 180, 
+ cutout: '70%', 
+ plugins: { 
+ legend: { position: 'bottom' } 
+ } 
+ } 
+ }); 
+ } 
+ } 
+  
+ window.inviaVoto = async function(propostaId) { 
+ if(!db) return; 
+  
+ // Verifica locale aggiuntiva (il server lo bloccherà comunque se usiamo un constraint unique su device_id) 
+ // Ma l'utente ha chiesto un solo voto in TOTALE tra tutte le proposte. 
+ // Se la tabella voti_proposte ha un constraint unique su device_id, allora può votare solo una volta. 
+  
+ const { data: check } = await db.from('voti_proposte').select('id').eq('device_id', deviceId).maybeSingle(); 
+ if(check) return alert('Hai già espresso il tuo unico voto disponibile!'); 
+  
+ const { error } = await db.from('voti_proposte').insert({ proposta_id: propostaId, device_id: deviceId }); 
+ if(error) { 
+ alert('Errore durante l\'invio del voto.'); 
+ return; 
+ } 
+ window.caricaVotazioniEGrafico(); 
+ }; 
+  
+ window.caricaArchivioVotazioni = async function() { 
+ if(!db) return; 
+ const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+  
+ const container = document.getElementById('archivioVotazioniList'); 
+ if(!container) return; 
+ container.innerHTML = ''; 
+  
+ data.forEach(item => { 
+ const card = document.createElement('div'); 
+ card.className = 'archive-vote-card'; 
+ card.innerHTML = ` 
+ <div class="archive-vote-header"> 
+ <h4>${escapeHTML(item.titolo)}</h4> 
+ <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span> 
+ </div> 
+ <div class="archive-vote-details"> 
+ Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong> 
+ </div> 
+ `; 
+ container.appendChild(card); 
+ }); 
+ }; 
+ 
+ function attivaRealtime() { 
+ if(!db) return; 
+ db.channel('lista2-realtime') 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande()) 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace()) 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti()) 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost()) 
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'voti_proposte' }, () => window.caricaVotazioniEGrafico()) 
+ .subscribe(); 
+ } 
+ 
+ // Caricamento sicuro di tutti i componenti con gestione errori individuale 
+ async function initApp() { 
+ const tasks = [ 
+ { name: 'Like', fn: caricaLikePost }, 
+ { name: 'Domande', fn: window.caricaDomande }, 
+ { name: 'Marketplace', fn: window.caricaMarketplace }, 
+ { name: 'Archivio Appunti', fn: window.caricaArchivioAppunti }, 
+ { name: 'Votazioni', fn: window.caricaVotazioniEGrafico }, 
+ { name: 'Storico Votazioni', fn: window.caricaArchivioVotazioni } 
+ ]; 
+  
+ for (const task of tasks) { 
+ try { 
+ if (typeof task.fn === 'function') await task.fn(); 
+ } catch (err) { 
+ console.error(`Errore nel caricamento del modulo ${task.name}:`, err); 
+ } 
+ } 
+ attivaRealtime(); 
+ } 
+  
+ initApp(); 
+ })(); 
+ </script> 
+ 
+</body> 
 </html>
