@@ -1694,7 +1694,14 @@
  if(fileDati && !fileDati.startsWith('static/')) {
  const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
  const publicUrl = data.publicUrl;
- window.open(publicUrl, '_blank');
+ // Uso un link temporaneo per forzare il download e bypassare i popup blocker su mobile
+ const link = document.createElement('a');
+ link.href = publicUrl;
+ link.target = '_blank';
+ link.download = nomeFile;
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
  } else {
  alert("Download del file statico: " + nomeFile);
  }
@@ -1801,6 +1808,9 @@
  <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p>
  ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''}
  <div class="note-meta">Caricato da uno studente</div>
+ </div>
+ <div class="note-download-icon" style="flex-shrink:0; margin-left:8px;">
+ <svg viewBox="0 0 24 24" width="20" height="20" fill="#94a3b8"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
  </div>
  `;
 
@@ -1954,8 +1964,7 @@
  const { error } = await db.from('proposte_votazione').insert({
  titolo,
  descrizione,
- categoria,
- device_id: deviceId
+ categoria
  });
 
  if(error) return alert("Errore nell'invio della proposta.");
