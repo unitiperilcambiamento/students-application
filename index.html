@@ -683,8 +683,21 @@
  <section class="section-container">
  <h2 class="section-title-margin">Tornei</h2>
  <div class="collab-scroll-container" id="torneiHomeContainer">
- <!-- Le card dei tornei verranno caricate qui dinamicamente -->
- <div id="torneiDynamicHome" style="display: contents;"></div>
+ <div class="tournament-card" style="opacity: 0.7; pointer-events: none; min-width: 220px;">
+ <h3>Altri tornei...</h3>
+ <p>Nessun altro torneo ancora disponibile.</p>
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">In arrivo</span>
+ </div>
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Calcetto')" style="min-width: 220px;">
+ <h3>Torneo di Calcetto</h3>
+ <p>Sfida le altre classi nel torneo più atteso dell'anno!</p>
+ <span class="tournament-tag">Iscrizioni aperte</span>
+ </div>
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Pallavolo')" style="min-width: 220px;">
+ <h3>Torneo di Pallavolo</h3>
+ <p>Partecipa al torneo di pallavolo misto della scuola.</p>
+ <span class="tournament-tag">Iscrizioni aperte</span>
+ </div>
  </div>
  </section>
  </div>
@@ -1729,31 +1742,10 @@
  });
  };
 
- window.caricaTornei = async function() {
- if(!db) return;
- const { data, error } = await db.from('iscrizione_tornei').select('*').order('creato_il', { ascending: false });
- if(error) return;
-
- const dynamicHome = document.getElementById('torneiDynamicHome');
- if(!dynamicHome) return;
- dynamicHome.innerHTML = '';
-
- (data || []).forEach(torneo => {
- const card = document.createElement('div');
- card.className = 'tournament-card';
- card.innerHTML = `
- <h3>${escapeHTML(torneo.nome_torneo || 'Torneo')}</h3>
- <p>${escapeHTML(torneo.descrizione || '')}</p>
- <span class="tournament-tag">Iscrizioni aperte</span>
- `;
- card.onclick = () => {
- document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione ' + (torneo.nome_torneo || 'Torneo');
- // Salva l'ID del torneo per l'invio
- window.currentTorneoId = torneo.id;
+ window.apriIscrizioneTorneoStatico = function(nomeTorneo) {
+ document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo;
+ window.currentTorneoNome = nomeTorneo;
  navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO');
- };
- dynamicHome.appendChild(card);
- });
  };
 
  window.toggleSezioneCapitano = function(show) {
@@ -1794,12 +1786,11 @@
  if(!nome || !cognome || !classe || !email) return alert('Compila tutti i campi personali!');
 
  let datiIscrizione = {
- torneo_id: window.currentTorneoId,
  nome,
  cognome,
  classe,
  email,
- ruolo_iscrizione: ruolo
+ tipo_iscrizione: ruolo
  };
 
  if(ruolo === 'capitano') {
@@ -1816,10 +1807,11 @@
  });
 
  datiIscrizione.nome_squadra = squadraNome;
+ datiIscrizione.numero_membri = membri.length;
  datiIscrizione.membri_squadra = membri;
  }
 
- const { error } = await db.from('partecipanti_tornei').insert(datiIscrizione);
+ const { error } = await db.from('iscrizione_tornei').insert(datiIscrizione);
  if(error) return alert("Errore durante l'invio dell'iscrizione: " + error.message);
 
  alert('Iscrizione inviata con successo!');
@@ -1843,14 +1835,13 @@
  .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'iscrizione_tornei' }, () => window.caricaTornei())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, payload => {
  if(payload.new) updateLikeCount(payload.new.post_id, payload.new.likes_count);
  })
  .subscribe();
  }
 
- Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti(), window.caricaTornei()]).then(attivaRealtime);
+ Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti()]).then(attivaRealtime);
  })();
  </script>
 
