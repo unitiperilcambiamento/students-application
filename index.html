@@ -12,6 +12,7 @@
  <meta name="apple-mobile-web-app-title" content="Lista 2">
  <meta name="mobile-web-app-capable" content="yes">
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
  <style>
  /* ==========================================================================
@@ -447,6 +448,20 @@
   color: #64748b;
   margin-bottom: 20px;
  }
+
+ .voting-proposals-container { display: flex; flex-direction: column; gap: 16px; }
+ .voting-card { background: white; border-radius: 18px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+ .voting-info { flex-grow: 1; }
+ .voting-info h4 { font-size: 14px; color: #0f172a; font-weight: 700; margin-bottom: 4px; }
+ .voting-info p { font-size: 12px; color: #64748b; line-height: 1.4; }
+ .vota-btn { background: var(--accent-color); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+ .vota-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #94a3b8; }
+ .chart-wrapper { width: 100%; max-width: 280px; margin: 0 auto; padding: 10px 0; }
+ .archive-vote-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; }
+ .archive-vote-header { display: flex; justify-content: space-between; align-items: center; }
+ .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; }
+ .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+ .archive-vote-details { font-size: 11.5px; color: #64748b; }
  </style>
 </head>
 <body>
@@ -659,6 +674,29 @@
  </div>
  </div>
  <div id="marketDynamicHome" style="display: contents;"></div>
+ </div>
+ </section>
+
+ <!-- SEZIONE PROPOSTE E VOTAZIONI -->
+ <section class="section-container">
+ <div class="section-header-inline">
+ <h2 class="section-title">Votazioni in Corso</h2>
+ </div>
+ <div class="voting-proposals-container" id="proposteAttiveList">
+ <!-- Proposte caricate dinamicamente -->
+ </div>
+
+ <div class="chart-wrapper">
+ <canvas id="votingChart"></canvas>
+ </div>
+ </section>
+
+ <section class="section-container">
+ <div class="section-header-inline">
+ <h2 class="section-title">Archivio Idee e Votazioni</h2>
+ </div>
+ <div id="archivioVotazioniList">
+ <!-- Storico caricato dinamicamente -->
  </div>
  </section>
 
@@ -1850,6 +1888,115 @@
  navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
  };
 
+ let votingChart = null;
+
+ window.caricaVotazioniEGrafico = async function() {
+ if(!db) return;
+
+ // 1. Recupera proposte attive
+ const { data: proposte, error: errProp } = await db.from('proposte_votazione').select('*');
+ if(errProp) return console.error("Errore proposte:", errProp);
+
+ // 2. Recupera voti per queste proposte
+ const { data: voti, error: errVoti } = await db.from('voti_proposte').select('*');
+ if(errVoti) return console.error("Errore voti:", errVoti);
+
+ const container = document.getElementById('proposteAttiveList');
+ if(!container) return;
+ container.innerHTML = '';
+
+ const labels = [];
+ const counts = [];
+ const userVotes = new Set(voti.filter(v => v.device_id === deviceId).map(v => v.proposta_id));
+
+ proposte.forEach(p => {
+ const numVoti = voti.filter(v => v.proposta_id === p.id).length;
+ labels.push(p.titolo);
+ counts.push(numVoti);
+
+ const card = document.createElement('div');
+ card.className = 'voting-card';
+ card.innerHTML = `
+ <div class="voting-info">
+ <h4>${escapeHTML(p.titolo)}</h4>
+ <p>${escapeHTML(p.descrizione || '')}</p>
+ </div>
+ <button class="vota-btn" ${userVotes.has(p.id) ? 'disabled' : ''} onclick="inviaVoto(${p.id})">
+ ${userVotes.has(p.id) ? 'Votato' : 'Vota'}
+ </button>
+ `;
+ container.appendChild(card);
+ });
+
+ const ctx = document.getElementById('votingChart');
+ if (ctx) updateChart(labels, counts);
+ };
+
+ function updateChart(labels, data) {
+ const ctx = document.getElementById('votingChart').getContext('2d');
+ if(votingChart) {
+ votingChart.data.labels = labels;
+ votingChart.data.datasets[0].data = data;
+ votingChart.update();
+ } else {
+ votingChart = new Chart(ctx, {
+ type: 'doughnut',
+ data: {
+ labels: labels,
+ datasets: [{
+ data: data,
+ backgroundColor: ['#17427a', '#3b82f6', '#93c5fd', '#60a5fa', '#2563eb'],
+ borderWidth: 0
+ }]
+ },
+ options: {
+ rotation: -90,
+ circumference: 180,
+ cutout: '70%',
+ plugins: {
+ legend: { position: 'bottom' }
+ }
+ }
+ });
+ }
+ }
+
+ window.inviaVoto = async function(propostaId) {
+ if(!db) return;
+ const { error } = await db.from('voti_proposte').insert({ proposta_id: propostaId, device_id: deviceId });
+ if(error) {
+ if(error.code === '23505') alert('Hai già votato per questa proposta!');
+ else alert('Errore durante l\'invio del voto.');
+ return;
+ }
+ window.caricaVotazioniEGrafico();
+ };
+
+ window.caricaArchivioVotazioni = async function() {
+ if(!db) return;
+ const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false });
+ if(error) return;
+
+ const container = document.getElementById('archivioVotazioniList');
+ if(!container) return;
+ container.innerHTML = '';
+
+ data.forEach(item => {
+ const card = document.createElement('div');
+ card.className = 'archive-vote-card';
+ card.innerHTML = `
+ <div class="archive-vote-header">
+ <h4>${escapeHTML(item.titolo)}</h4>
+ <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span>
+ </div>
+ <div class="archive-vote-details">
+ Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong>
+ </div>
+ `;
+ container.appendChild(card);
+ });
+ };
+
  function attivaRealtime() {
  if(!db) return;
  db.channel('lista2-realtime')
@@ -1857,10 +2004,11 @@
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost())
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'voti_proposte' }, () => window.caricaVotazioniEGrafico())
  .subscribe();
  }
 
- Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti()]).then(attivaRealtime);
+ Promise.all([caricaLikePost(), window.caricaDomande(), window.caricaMarketplace(), window.caricaArchivioAppunti(), window.caricaVotazioniEGrafico(), window.caricaArchivioVotazioni()]).then(attivaRealtime);
  })();
  </script>
 
