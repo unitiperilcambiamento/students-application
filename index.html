@@ -1251,9 +1251,20 @@
  const SUPABASE_URL = "https://kijgeyfhvvrmriwpvebm.supabase.co";
  const SUPABASE_KEY = "sb_publishable_5WJ5tNUj_NpdfbdQAIiVWQ_KPXYc_VM";
  const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+ // 1. GESTIONE DEVICE_ID
+ function getDeviceId() {
+ let id = localStorage.getItem('lista2_device_id');
+ if (!id) {
+ id = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+ localStorage.setItem('lista2_device_id', id);
+ }
+ return id;
+ }
+ const deviceId = getDeviceId();
+
  const gradientiDomande = ['orange-gradient', 'red-gradient', 'purple-gradient', 'blue-gradient', 'green-gradient'];
- const likedStorageKey = 'lista2_liked_posts';
- let likedPosts = new Set(JSON.parse(localStorage.getItem(likedStorageKey) || '[]').map(Number));
+ let likedPosts = new Set();
  let selectedQuestionGradient = 'orange-gradient';
  let questionViewerIndex = 0;
  const defaultQuestions = [
@@ -1272,10 +1283,6 @@
  };
  }
 
- function salvaLikeLocali() {
- localStorage.setItem(likedStorageKey, JSON.stringify(Array.from(likedPosts)));
- }
-
  function updateLikeCount(postId, count) {
  document.querySelectorAll('.like-btn[data-post-id="' + postId + '"]').forEach(button => {
  const countSpan = button.querySelector('.like-count');
@@ -1286,55 +1293,58 @@
  }
 
  async function caricaLikePost() {
- document.querySelectorAll('.like-btn[data-post-id]').forEach(button => {
- const postId = Number(button.dataset.postId);
- if(likedPosts.has(postId)) button.classList.add('liked');
- else button.classList.remove('liked');
- });
  if(!db) return;
- const postIds = Array.from(document.querySelectorAll('.like-btn[data-post-id]')).map(button => Number(button.dataset.postId));
- const { data, error } = await db.from('post_likes').select('post_id, likes_count').in('post_id', postIds);
- if(error) return;
- const presenti = new Set((data || []).map(row => Number(row.post_id)));
- (data || []).forEach(row => updateLikeCount(row.post_id, row.likes_count));
- for(const button of document.querySelectorAll('.like-btn[data-post-id]')) {
+ const postButtons = document.querySelectorAll('.like-btn[data-post-id]');
+
+ // 1. Ottieni tutti i like per contare e verificare l'utente attuale
+ const { data: allLikes, error: errLikes } = await db.from('post_likes').select('post_id, device_id');
+ if(errLikes) return console.error("Errore caricamento like:", errLikes);
+
+ // 2. Filtra i like dell'utente attuale
+ likedPosts = new Set(allLikes.filter(l => l.device_id === deviceId).map(l => Number(l.post_id)));
+
+ // 3. Conta i like per ogni post e aggiorna il DOM
+ postButtons.forEach(button => {
  const postId = Number(button.dataset.postId);
  const defaultLikes = Number(button.dataset.defaultLikes || 0);
- if(!presenti.has(postId)) {
- await db.from('post_likes').upsert({ post_id: postId, likes_count: defaultLikes }, { onConflict: 'post_id' });
- updateLikeCount(postId, defaultLikes);
- }
- }
+ const dbLikesCount = allLikes.filter(l => Number(l.post_id) === postId).length;
+ updateLikeCount(postId, dbLikesCount + defaultLikes);
+ });
  }
 
  window.toggleLike = async function(button) {
  const postId = Number(button.dataset.postId);
  if(!postId) return;
+
  const wasLiked = likedPosts.has(postId);
  const delta = wasLiked ? -1 : 1;
+
+ // Aggiornamento DOM Istantaneo
  const countSpan = button.querySelector('.like-count');
  const countAttuale = parseInt(countSpan.textContent, 10) || 0;
- const conteggioProvvisorio = Math.max(0, countAttuale + delta);
  if(wasLiked) likedPosts.delete(postId);
  else likedPosts.add(postId);
- salvaLikeLocali();
- updateLikeCount(postId, conteggioProvvisorio);
+ updateLikeCount(postId, Math.max(0, countAttuale + delta));
+
  if(!db) return;
- const { data } = await db.from('post_likes').select('likes_count').eq('post_id', postId).maybeSingle();
- const baseCount = data ? Number(data.likes_count || 0) : countAttuale;
- const nuovoTotale = Math.max(0, baseCount + delta);
- const query = data
- ? db.from('post_likes').update({ likes_count: nuovoTotale }).eq('post_id', postId)
- : db.from('post_likes').insert({ post_id: postId, likes_count: nuovoTotale });
- const { error } = await query;
+
+ if(wasLiked) {
+ // Rimuovi il like
+ const { error } = await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId);
  if(error) {
- if(wasLiked) likedPosts.add(postId);
- else likedPosts.delete(postId);
- salvaLikeLocali();
+ likedPosts.add(postId);
  updateLikeCount(postId, countAttuale);
- return;
  }
- updateLikeCount(postId, nuovoTotale);
+ } else {
+ // Aggiungi il like
+ const { error } = await db.from('post_likes').insert({ post_id: postId, device_id: deviceId });
+ if(error) {
+ // Se fallisce (es. già presente), proviamo a rimuoverlo (toggle)
+ await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId);
+ likedPosts.delete(postId);
+ updateLikeCount(postId, countAttuale);
+ }
+ }
  };
 
  function creaCardDomanda(domanda) {
@@ -1819,9 +1829,7 @@
  .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, payload => {
- if(payload.new) updateLikeCount(payload.new.post_id, payload.new.likes_count);
- })
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost())
  .subscribe();
  }
 
