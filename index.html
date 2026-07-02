@@ -1757,17 +1757,7 @@
  window.apriIscrizioneTorneoStatico = function(nomeTorneo) {
  document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo;
  window.currentTorneoNome = nomeTorneo;
-
- // Se è pallavolo, nascondiamo la sezione ruolo (capitano/spettatore)
- const ruoloSezione = document.getElementById('ruoloTorneoSezione');
- if(nomeTorneo === 'Pallavolo') {
- ruoloSezione.style.display = 'none';
- document.querySelector('input[name="ruoloTorneo"][value="spettatore"]').checked = true;
- window.toggleSezioneCapitano(false);
- } else {
- ruoloSezione.style.display = 'block';
- }
-
+ document.getElementById('ruoloTorneoSezione').style.display = 'block';
  navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO');
  };
 
@@ -1790,7 +1780,7 @@
  <input type="text" class="filter-input membro-nome" placeholder="Nome e Cognome">
  <div style="display:flex; gap:10px;">
  <input type="text" class="filter-input membro-classe" style="flex:1;" placeholder="Classe">
- <input type="text" class="filter-input membro-ruolo" style="flex:2;" placeholder="Ruolo">
+ ${window.currentTorneoNome !== 'Pallavolo' ? `<input type="text" class="filter-input membro-ruolo" style="flex:2;" placeholder="Ruolo">` : ''}
  </div>
  `;
  container.appendChild(div);
@@ -1822,10 +1812,11 @@
 
  const membri = [];
  document.querySelectorAll('#containerMembriSquadra > div').forEach(div => {
+ const ruoloInput = div.querySelector('.membro-ruolo');
  membri.push({
  nome: div.querySelector('.membro-nome').value.trim(),
  classe: div.querySelector('.membro-classe').value.trim(),
- ruolo: div.querySelector('.membro-ruolo').value.trim()
+ ruolo: ruoloInput ? ruoloInput.value.trim() : ''
  });
  });
 
