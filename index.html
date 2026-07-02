@@ -1,2134 +1,1876 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <title>App Lista 2</title>
-
- <!-- Tag per l'effetto App Nativa (PWA) -->
- <link rel="manifest" href="manifest.json">
- <meta name="apple-mobile-web-app-capable" content="yes">
- <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <meta name="apple-mobile-web-app-title" content="Lista 2">
- <meta name="mobile-web-app-capable" content="yes">
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
- <style>
- /* ==========================================================================
- VARIABILI CSS PER IL CAMBIO COLORE REAL-TIME
- ========================================================================== */
- :root {
- --primary-grad-start: #0f2d59;
- --primary-grad-end: #17427a;
- --accent-color: #17427a;
- --accent-light: #93c5fd;
- }
-
- * {
- margin: 0;
- padding: 0;
- box-sizing: border-box;
- -webkit-tap-highlight-color: transparent;
- }
-
- body {
- background-color: #0e1e38;
- font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
- display: flex;
- justify-content: center;
- align-items: flex-start;
- min-height: 100vh;
- color: #1a202c;
- }
-
- /* CONTAINER TEMPLATE MOBILE */
- .app-container {
- width: 100%;
- max-width: 412px;
- background-color: #f8fafc;
- min-height: 100vh;
- position: relative;
- padding-bottom: 110px;
- overflow-y: auto;
- overflow-x: hidden;
- box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
- }
- .app-container::-webkit-scrollbar { display: none; }
-
- /* NAVIGAZIONE DELLE VISTE (SINGLE PAGE APPLICATION) */
- .app-view {
- display: none;
- animation: smoothFade 0.4s ease-out;
- }
- .app-view.active {
- display: block;
- }
-
- /* HEADER SFERICO SUPERIORE */
- .app-header {
- background: linear-gradient(180deg, var(--primary-grad-start) 0%, var(--primary-grad-end) 100%);
- padding: 40px 24px 50px 24px;
- border-radius: 0 0 50% 50% / 0 0 20% 20%;
- text-align: center;
- position: relative;
- transition: background 0.3s ease;
- }
-
- .logos-container {
- display: flex;
- justify-content: center;
- align-items: center;
- gap: 20px;
- margin-bottom: 18px;
- }
-
- .header-logo-free {
- height: 48px;
- max-width: 110px;
- object-fit: contain;
- filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2));
- }
-
- .main-title {
- color: #ffffff;
- font-size: 23px;
- font-weight: 800;
- letter-spacing: 0.8px;
- line-height: 1.25;
- }
-
-
- /* SEZIONE NOTIZIE (STACCATA DALL'HEADER) */
- .news-slider-section {
- margin: 24px 20px 28px 20px;
- background: #ffffff;
- border-radius: 18px;
- padding: 16px 44px;
- box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
- position: relative;
- min-height: 85px;
- z-index: 10;
- }
- .news-slide { display: none; text-align: center; }
- .news-slide.active { display: block; animation: smoothFade 0.4s; }
- .news-tag {
- display: inline-block;
- background: #e0f2fe;
- color: #0369a1;
- font-size: 10.5px;
- font-weight: 700;
- padding: 3px 10px;
- border-radius: 9999px;
- margin-bottom: 6px;
- text-transform: uppercase;
- }
- .news-slide p { font-size: 13px; color: #475569; font-weight: 500; line-height: 1.4; }
- .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; padding: 8px; }
- .slider-arrow.prev { left: 12px; }
- .slider-arrow.next { right: 12px; }
-
- /* STRUTTURA GENERALE DELLE SEZIONI COINVOLTE */
- .section-container { padding: 0 20px; margin-bottom: 28px; }
- .section-header-inline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
- .section-title { font-size: 17.5px; font-weight: 700; color: #0f172a; }
- .section-title-margin { font-size: 17.5px; font-weight: 700; color: #0f172a; margin-bottom: 18px; }
- .vedi-tutto { font-size: 12.5px; color: var(--accent-color); text-decoration: none; font-weight: 700; cursor: pointer; }
-
- /* CONTENITORI DI SCROLL ORIZZONTALE */
- .posts-scroll-container, .collab-scroll-container, .questions-scroll-container, .market-scroll-container {
- display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; margin-right: -20px; padding-right: 20px; scrollbar-width: none;
- }
- .posts-scroll-container::-webkit-scrollbar, .collab-scroll-container::-webkit-scrollbar, .questions-scroll-container::-webkit-scrollbar, .market-scroll-container::-webkit-scrollbar { display: none; }
-
- /* CARDS POST DEI RAPPRESENTANTI */
- .post-card {
- min-width: 305px; max-width: 305px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #f1f5f9; display: flex; flex-direction: column;
- }
- .post-author-strip { background-color: var(--accent-color); padding: 12px 16px; display: flex; align-items: center; position: relative; transition: background 0.3s; }
- .author-info { display: flex; flex-direction: column; }
- .author-name { color: #ffffff; font-size: 13.5px; font-weight: 600; }
- .author-role { color: var(--accent-light); font-size: 11px; }
- .post-date { position: absolute; right: 16px; color: #e2e8f0; opacity: 0.8; font-size: 10.5px; }
- .post-content { padding: 16px; font-size: 13.5px; color: #334155; line-height: 1.45; flex-grow: 1; }
- .post-actions-bar { display: flex; gap: 20px; padding: 10px 16px; border-top: 1px solid #f1f5f9; background: #fafbfc; }
- .action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600; padding: 4px 0; }
- .action-btn svg { width: 17px; height: 17px; fill: #64748b; transition: fill 0.2s; }
- .like-btn.liked svg { fill: #ef4444; }
- .like-btn.liked { color: #ef4444; }
-
- /* COLLABORAZIONI CON EFFETTO SUSPENSE */
- .collab-card { min-width: 210px; width: 210px; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
- .collab-img-container { width: 100%; height: 115px; background: #f1f5f9; }
- .collab-img { width: 100%; height: 100%; object-fit: cover; }
- .collab-text-content { padding: 14px; }
- .collab-text-content h3 { font-size: 14px; color: #0f172a; margin-bottom: 4px; font-weight: 700; }
- .collab-text-content p { font-size: 11.5px; color: #475569; line-height: 1.35; }
-
- .collab-card.suspense { opacity: 0.6; filter: blur(0.4px); pointer-events: none; }
- .suspense-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #e2e8f0; }
- .lock-svg { width: 26px; height: 26px; fill: #475569; }
-
- /* DOMANDE ANONIME */
- .ngl-card { min-width: 230px; width: 230px; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; border: 1px solid #f1f5f9; }
- .ngl-header { padding: 14px; text-align: center; color: #ffffff; font-weight: 700; font-size: 13.5px; letter-spacing: 0.6px; text-transform: uppercase; border-radius: 24px 24px 0 0; }
- .ngl-body { padding: 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 110px; text-align: center; }
- .question-text { font-size: 13.5px; color: #1e293b; font-weight: 600; line-height: 1.4; }
- .orange-gradient { background: linear-gradient(135deg, #ff9233, #ff5252); }
- .red-gradient { background: linear-gradient(135deg, #f43f5e, #f59e0b); }
- .purple-gradient { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
- .blue-gradient { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
-
- .create-card .prompt-text, .create-card-market .prompt-text { font-size: 13.5px; color: #1e293b; font-weight: 700; margin-bottom: 12px; }
- .add-question-btn, .add-market-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.3s; }
-
- /* MARKETPLACE SULLA HOME */
- .market-card-scroll { min-width: 200px; width: 200px; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; display: flex; flex-direction: column; }
- .market-info-scroll { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
- .market-info-scroll h4 { font-size: 13px; color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
- .market-author-scroll { font-size: 11px; color: #64748b; margin-bottom: 8px; display: block; }
- .market-footer-scroll { display: flex; justify-content: space-between; align-items: center; }
-
- .create-card-market { min-width: 200px; width: 200px; background: #ffffff; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; }
- .market-create-body { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
- /* STRUTTURA PROPOSTE CANDIDATI */
- .view-title-banner { padding: 24px 20px 10px 20px; font-size: 20px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
- .candidate-card { background: white; border-radius: 18px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; }
- .candidate-header { display: flex; align-items: center; gap: 14px; }
- .candidate-avatar-placeholder { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-grad-start), var(--primary-grad-end)); color: white; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
- .candidate-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
- .candidate-meta h3 { font-size: 15.5px; color: #0f172a; font-weight: 700; line-height: 1.2; }
- .candidate-meta span { font-size: 10.5px; color: #0284c7; font-weight: 700; background: #e0f2fe; padding: 3px 10px; border-radius: 20px; display: inline-block; }
- .candidate-goal-box { background: #f8fafc; border-left: 4px solid var(--accent-color); padding: 10px 12px; border-radius: 0 12px 12px 0; font-size: 13px; color: #334155; line-height: 1.4; }
-
- /* SEZIONI "VEDI TUTTO" (GRIGLIE E FILTRI) */
- .back-link { font-size: 13px; color: var(--accent-color); text-decoration: none; font-weight: 700; cursor: pointer; }
- .search-filter-wrapper { padding: 0 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
- .filter-input { width: 100%; padding: 12px 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 13.5px; color: #1e293b; outline: none; }
- .filter-input::placeholder { color: #94a3b8; }
- .market-grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 0 20px; }
- .market-card-grid { width: 100% !important; min-width: 0 !important; }
- .vertical-list-container { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; }
- .vertical-list-container .ngl-card { width: 100% !important; min-width: 0 !important; }
-
- /* ARCHIVIO DOCUMENTI */
- .archive-folder-row { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.01); }
- .folder-left-side { display: flex; align-items: center; gap: 14px; }
- .folder-icon-plate { width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; }
- .folder-icon-plate svg { width: 22px; height: 22px; fill: var(--accent-color); }
- .folder-titles h4 { font-size: 14px; color: #0f172a; font-weight: 700; }
- .folder-titles p { font-size: 11.5px; color: #64748b; }
- .download-arrow { font-size: 16px; color: #94a3b8; font-weight: bold; }
-
- /* CALENDARIO INTERATTIVO AVANZATO */
- .calendar-widget { background: #ffffff; border-radius: 22px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 20px; }
- .calendar-widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
- .calendar-month-title { font-size: 15px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
- .cal-arrow { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; color: #475569; cursor: pointer; display: flex; justify-content: center; align-items: center; }
- .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
- .weekday-label { font-size: 11px; font-weight: 700; color: #94a3b8; padding-bottom: 4px; }
- .calendar-day { font-size: 13px; font-weight: 600; padding: 8px 0; border-radius: 10px; color: #334155; position: relative; cursor: pointer; }
- .calendar-day.empty { pointer-events: none; }
- .calendar-day.has-event { background-color: #f0fdf4; color: #166534; font-weight: 700; }
- .calendar-day.has-event::after { content: ''; width: 5px; height: 5px; background: #22c55e; border-radius: 50%; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); }
- .calendar-day.selected { background-color: var(--accent-color) !important; color: #ffffff !important; }
- .calendar-day.selected::after { background: #ffffff; }
-
- .main-calendar-wrapper .calendar-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
- .main-calendar-wrapper .calendar-row { display: flex; align-items: center; background: #ffffff; padding: 12px; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
- .main-calendar-wrapper .date-badge { background-color: var(--primary-grad-start); width: 48px; height: 48px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; margin-right: 14px; flex-shrink: 0; transition: background 0.3s; }
- .main-calendar-wrapper .badge-day { font-size: 16px; font-weight: 700; line-height: 1; }
- .main-calendar-wrapper .badge-month { font-size: 9px; font-weight: 700; opacity: 0.8; margin-top: 2px; }
- .main-calendar-wrapper .event-details h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; }
- .main-calendar-wrapper .event-details p { font-size: 11.5px; color: #64748b; margin-top: 2px; }
-
- /* CAMBIO COLORE */
- .color-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 12px; }
- .color-option-card { background: white; border: 1px solid #f1f5f9; border-radius: 18px; padding: 14px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 8px; }
- .color-circle-preview { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
- .color-option-card span { font-size: 13px; font-weight: 600; color: #1e293b; }
-
- /* BOTTOM NAVBAR ESTRUSA */
- .bottom-nav {
- position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 380px; background: #ffffff; height: 68px; border-radius: 35px; box-shadow: 0 12px 35px rgba(15, 45, 89, 0.16); display: flex; justify-content: space-around; align-items: center; padding: 0 12px; z-index: 999; border: 1px solid rgba(241, 245, 249, 0.8);
- }
- .nav-item { background: none; border: none; cursor: pointer; padding: 12px; display: flex; justify-content: center; align-items: center; }
- .nav-item svg { width: 24px; height: 24px; fill: #475569; transition: fill 0.2s, transform 0.2s; }
- .nav-item.active svg { fill: var(--accent-color); transform: scale(1.05); }
-
- /* Tasto Centrale Archivio Drive */
- .center-item svg { fill: #ffffff !important; width: 24px; height: 24px; }
- .center-item {
- background: linear-gradient(135deg, var(--primary-grad-start) 0%, var(--primary-grad-end) 100%); width: 54px; height: 54px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 14px rgba(23, 66, 122, 0.35); transform: translateY(-16px); border: 4px solid #ffffff; transition: background 0.3s;
- }
- .center-item:active { transform: translateY(-16px) scale(0.95); }
-
-
- .green-gradient { background: linear-gradient(135deg, #10b981, #22c55e); }
- .question-compose-panel { display: flex; flex-direction: column; gap: 14px; }
- .question-color-row { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 2px 0 4px; }
- .question-color-choice { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 2px 9px rgba(15, 23, 42, 0.16); cursor: pointer; outline: 2px solid transparent; }
- .question-color-choice.active { outline-color: var(--accent-color); transform: scale(1.06); }
- .question-preview-title { font-size: 12px; color: #64748b; font-weight: 700; text-align: center; }
- .question-preview-card { margin: 0 auto; }
- .questions-viewer-wrap { padding: 0 20px; }
- .question-stage { position: relative; padding: 4px 34px 76px; }
- .single-question-card { width: 100% !important; min-width: 0 !important; min-height: 260px; position: relative; overflow: visible; }
- .single-question-card::before, .single-question-card::after { content: ''; position: absolute; top: 50%; width: 46px; height: 46px; border-radius: 50%; background: #f8fafc; transform: translateY(-50%); z-index: 2; }
- .single-question-card::before { left: -23px; }
- .single-question-card::after { right: -23px; }
- .single-question-card .ngl-body { min-height: 205px; padding: 24px 28px; }
- .question-bottom-hole { position: absolute; left: 50%; bottom: -30px; width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; transform: translateX(-50%); z-index: 3; }
- .question-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; font-size: 20px; font-weight: 800; cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
- .question-arrow.prev { left: -17px; }
- .question-arrow.next { right: -17px; }
- .answer-bubble { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; transition: transform 0.2s; }
- .answer-bubble:active { transform: translate(-50%, -50%) scale(0.9); }
- .question-counter { text-align: center; margin-top: -54px; margin-bottom: 12px; color: #64748b; font-size: 12px; font-weight: 700; }
- .question-answer-pocket { display: none; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); flex-direction: column; gap: 10px; }
- .question-answer-pocket.active { display: flex; animation: smoothFade 0.4s; }
- .question-answer-pocket textarea { min-height: 82px; resize: none; }
- .answer-send-btn { width: 100%; padding: 12px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 14px; cursor: pointer; }
-
-
- @keyframes smoothFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
- .floating-add-btn {
-  position: fixed;
-  bottom: 105px;
-  right: 20px;
-  background: #000;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  width: 50px;
-  height: 50px;
-  font-size: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
- }
-
- @media (min-width: 412px) {
-  .floating-add-btn {
-  right: calc(50% - 186px);
-  }
- }
-
- .note-card {
-  background: white;
-  border-radius: 18px;
-  padding: 16px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
- }
- .note-icon {
-  width: 48px;
-  height: 48px;
-  background: #f1f5f9;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-shrink: 0;
- }
- .note-icon svg {
-  width: 24px;
-  height: 24px;
-  fill: var(--accent-color);
- }
- .note-info {
-  flex-grow: 1;
- }
- .note-info h4 {
-  font-size: 15px;
-  color: #0f172a;
-  font-weight: 700;
-  margin-bottom: 2px;
- }
- .note-info p {
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.4;
- }
- .note-info .note-meta {
-  font-size: 11px;
-  color: var(--accent-color);
-  font-weight: 700;
-  margin-top: 4px;
- }
-
- .tournament-card {
-  min-width: 220px;
-  background: white;
-  border-radius: 20px;
-  padding: 18px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-  cursor: pointer;
- }
- .tournament-card h3 {
-  font-size: 15px;
-  color: #0f172a;
-  margin-bottom: 6px;
- }
- .tournament-card p {
-  font-size: 12px;
-  color: #64748b;
- }
- .tournament-tag {
-  display: inline-block;
-  padding: 4px 10px;
-  background: #f0fdf4;
-  color: #166534;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 20px;
-  margin-top: 10px;
- }
-
- .progress-container {
-  display: none;
-  width: 100%;
-  height: 8px;
-  background-color: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 10px;
- }
- .progress-bar {
-  width: 0%;
-  height: 100%;
-  background-color: var(--accent-color);
-  transition: width 0.3s ease;
- }
- .progress-text {
-  font-size: 11px;
-  color: #64748b;
-  text-align: center;
-  margin-top: 4px;
- }
-
- /* MODALE DOWNLOAD */
- .download-modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.7);
-  z-index: 2000;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(4px);
- }
- .download-modal-content {
-  background: #ffffff;
-  width: 90%;
-  max-width: 320px;
-  padding: 24px;
-  border-radius: 24px;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
- }
- .download-modal-content h3 {
-  font-size: 16px;
-  color: #0f172a;
-  margin-bottom: 8px;
- }
- .download-modal-content p {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 20px;
- }
-
- .voting-proposals-container { display: flex; flex-direction: column; gap: 16px; }
- .voting-card { background: white; border-radius: 18px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
- .voting-info { flex-grow: 1; }
- .voting-info h4 { font-size: 14px; color: #0f172a; font-weight: 700; margin-bottom: 4px; }
- .voting-info p { font-size: 12px; color: #64748b; line-height: 1.4; }
- .vota-btn { background: var(--accent-color); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
- .vota-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #94a3b8; }
- .chart-wrapper { width: 100%; max-width: 280px; margin: 0 auto; padding: 10px 0; }
- .archive-vote-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; }
- .archive-vote-header { display: flex; justify-content: space-between; align-items: center; }
- .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; }
- .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
- .archive-vote-details { font-size: 11.5px; color: #64748b; }
- </style>
-</head>
-<body>
-
- <div class="app-container">
-
- <!-- HEADER GLOBALE -->
- <header class="app-header">
- <div class="logos-container">
- <img src="lista.PNG" alt="Logo Lista 2" class="header-logo-free">
- <img src="123.png" alt="Logo Scuola" class="header-logo-free">
- </div>
- <h1 class="main-title" id="headerTitle">BENVENUTI SULL'APP<br>DELLA LISTA 2</h1>
- </header>
-
-
- <!-- ================= VISTA 1: HOME ================= -->
- <div id="view-home" class="app-view active">
-
- <!-- NOTIZIE IN EVIDENZA -->
- <section class="news-slider-section">
- <div class="news-slider" id="newsSlider">
- <div class="news-slide active">
- <span class="news-tag">Ultima Ora</span>
- <p>Le votazioni per i rappresentanti si avvicinano. Scopri il nostro programma!</p>
- </div>
- <div class="news-slide">
- <span class="news-tag">Eventi</span>
- <p>Assemblea d'istituto fissata per questa settimana in aula magna. Non mancare!</p>
- </div>
- <div class="news-slide">
- <span class="news-tag">Info</span>
- <p>Nuovi appunti di Diritto e Finanza caricati nel Drive proprio oggi.</p>
- </div>
- </div>
- <button class="slider-arrow prev" onclick="moveSlide(-1)">&#10094;</button>
- <button class="slider-arrow next" onclick="moveSlide(1)">&#10095;</button>
- </section>
-
- <!-- POST DEI RAPPRESENTANTI (Senza vedi tutto) -->
- <section class="section-container">
- <h2 class="section-title-margin">Post dei Rappresentanti</h2>
- <div class="posts-scroll-container">
- <div class="post-card">
- <div class="post-author-strip">
- <div class="author-info">
- <h3 class="author-name">Federico Rossi</h3>
- <span class="author-role">Rappresentante d'Istituto</span>
- </div>
- <span class="post-date" data-timestamp="2026-07-02T11:45:00">12:30</span>
- </div>
- <div class="post-content">
- <p>Ciao a tutti! Vi ricordo che venerdì alle 11 ci sarà l'assemblea studentesca generale in aula magna per raccogliere idee sulle proposte del prossimo trimestre. Passate parola!</p>
- </div>
- <div class="post-actions-bar">
- <button class="action-btn like-btn" data-post-id="1" data-default-likes="0" onclick="toggleLike(this)">
- <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
- <span class="like-count">0</span>
- </button>
- </div>
- </div>
- <div class="post-card">
- <div class="post-author-strip">
- <div class="author-info">
- <h3 class="author-name">Marco Bianchi</h3>
- <span class="author-role">Rappresentante d'Istituto</span>
- </div>
- <span class="post-date" data-timestamp="2026-07-01T09:00:00">Ieri</span>
- </div>
- <div class="post-content">
- <p>Grandi ragazzi! Abbiamo appena chiuso l'accordo per rinnovare le convenzioni con i principali punti di ristoro vicino alla scuola. Trovate i dettagli subito sotto nelle collaborazioni!</p>
- </div>
- <div class="post-actions-bar">
- <button class="action-btn like-btn" data-post-id="2" data-default-likes="0" onclick="toggleLike(this)">
- <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
- <span class="like-count">0</span>
- </button>
- </div>
- </div>
- </div>
- </section>
-
- <!-- COLLABORAZIONI (Senza vedi tutto, con 4 nuovi contratti bloccati e testo "Presto disponibile...") -->
- <section class="section-container">
- <div class="section-header-inline">
- <h2 class="section-title">Collaborazioni</h2>
- </div>
- <div class="collab-scroll-container">
- <div class="collab-card">
- <div class="collab-img-container">
- <img src="pablo.jpg" alt="Pablo Picantes" class="collab-img">
- </div>
- <div class="collab-text-content">
- <h3>Pablo Picantes</h3>
- <p>Rinnovata la collaborazione: qualsiasi menu a 9.99 euro esibendo l'applicazione!</p>
- </div>
- </div>
- <!-- Nuovi partner in suspense con testo "Presto disponibile..." -->
- <div class="collab-card suspense">
- <div class="collab-img-container">
- <div class="suspense-placeholder">
- <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
- </div>
- </div>
- <div class="collab-text-content">
- <h3>Presto disponibile...</h3>
- <p><i></i></p>
- </div>
- </div>
- <div class="collab-card suspense">
- <div class="collab-img-container">
- <div class="suspense-placeholder">
- <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
- </div>
- </div>
- <div class="collab-text-content">
- <h3>Presto disponibile...</h3>
- <p><i></i></p>
- </div>
- </div>
- <div class="collab-card suspense">
- <div class="collab-img-container">
- <div class="suspense-placeholder">
- <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
- </div>
- </div>
- <div class="collab-text-content">
- <h3>Presto disponibile...</h3>
- <p><i></i></p>
- </div>
- </div>
- <div class="collab-card suspense">
- <div class="collab-img-container">
- <div class="suspense-placeholder">
- <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
- </div>
- </div>
- <div class="collab-text-content">
- <h3>Presto disponibile...</h3>
- <p><i></i></p>
- </div>
- </div>
- </div>
- </section>
-
- <!-- DOMANDE ANONIME -->
- <section class="section-container">
- <div class="section-header-inline">
- <h2 class="section-title">Domande Anonime</h2>
- <span class="vedi-tutto" onclick="navigateTo('view-all-questions', this, 'STORICO DOMANDE')">Vedi tutto</span>
- </div>
- <div class="questions-scroll-container" id="domandeHomeContainer">
- <div class="ngl-card create-card">
- <div class="ngl-header orange-gradient">Fai una domanda</div>
- <div class="ngl-body">
- <p class="prompt-text">Chiedici quello che vuoi...</p>
- <button class="add-question-btn" onclick="navigateTo('view-add-question', this, 'FAI UNA DOMANDA')">+</button>
- </div>
- </div>
- <div class="ngl-card">
- <div class="ngl-header red-gradient">Anonimo</div>
- <div class="ngl-body">
- <p class="question-text">Quali sono le proposte principali per strutturare le assemblee?</p>
- </div>
- </div>
- <div class="ngl-card">
- <div class="ngl-header purple-gradient">Anonimo</div>
- <div class="ngl-body">
- <p class="question-text">Riusciremo ad avere sconti reali anche per i libri scolastici?</p>
- </div>
- </div>
- <div id="domandeDynamicHome" style="display: contents;"></div>
- </div>
- </section>
-
- <!-- MARKETPLACE & RIPETIZIONI -->
- <section class="section-container">
- <div class="section-header-inline">
- <h2 class="section-title">Marketplace & Ripetizioni</h2>
- <span class="vedi-tutto" onclick="navigateTo('view-all-market', this, 'MARKETPLACE COMPLETO')">Vedi tutto</span>
- </div>
- <div class="market-scroll-container" id="marketHomeContainer">
-
- <div class="create-card-market">
- <div class="market-create-body">
- <p class="prompt-text">Inizia a fare ripetizioni anche te!</p>
- <button class="add-market-btn" onclick="navigateTo('view-add-market', this, 'NUOVO ANNUNCIO')">+</button>
- </div>
- </div>
-
- <div class="market-card-scroll">
- <div class="market-info-scroll">
- <h4>Le basi della fisica</h4>
- <span class="market-author-scroll">Francesco Cerri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll">
- <div class="market-info-scroll">
- <h4>Ripetizioni Matematica</h4>
- <span class="market-author-scroll">Elena Gatti (5°B)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
- <div id="marketDynamicHome" style="display: contents;"></div>
- </div>
- </section>
-
- <!-- SEZIONE PROPOSTE E VOTAZIONI -->
- <section class="section-container">
- <h2 class="section-title-margin">Proposte e Votazioni</h2>
- <div class="collab-scroll-container">
-
- <div class="tournament-card" onclick="navigateTo('view-invia-proposta', null, 'INVIA UNA PROPOSTA')">
- <h3>Invia una Proposta</h3>
- <p>Condividi le tue idee per migliorare la nostra scuola.</p>
- <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span>
- </div>
-
- <div class="tournament-card" onclick="navigateTo('view-votazioni', null, 'VOTAZIONI')">
- <h3>Votazioni Attive</h3>
- <p>Partecipa alle votazioni in corso e guarda i risultati.</p>
- <span class="tournament-tag">Vota ora</span>
- </div>
-
- <div class="tournament-card" onclick="navigateTo('view-archivio-storico-votazioni', null, 'ARCHIVIO VOTAZIONI')">
- <h3>Archivio Votazioni</h3>
- <p>Scopri i risultati delle scorse edizioni e delle proposte approvate.</p>
- <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">Storico</span>
- </div>
-
- </div>
- </section>
-
- <!-- SEZIONE TORNEI -->
- <section class="section-container">
- <h2 class="section-title-margin">Tornei</h2>
- <div class="collab-scroll-container" id="torneiHomeContainer">
- <div class="tournament-card" style="opacity: 0.7; pointer-events: none; min-width: 220px;">
- <h3>Altri tornei...</h3>
- <p>Nessun altro torneo ancora disponibile.</p>
- <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">In arrivo</span>
- </div>
- <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Calcetto')" style="min-width: 220px;">
- <h3>Torneo di Calcetto</h3>
- <p>Sfida le altre classi nel torneo più atteso dell'anno!</p>
- <span class="tournament-tag">Iscrizioni aperte</span>
- </div>
- <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Pallavolo')" style="min-width: 220px;">
- <h3>Torneo di Pallavolo</h3>
- <p>Partecipa al torneo di pallavolo misto della scuola.</p>
- <span class="tournament-tag">Iscrizioni aperte</span>
- </div>
- </div>
- </section>
- </div>
-
-
- <!-- ================= VISTA: VEDI TUTTO DOMANDE ================= -->
- <div id="view-all-questions" class="app-view">
- <div class="view-title-banner">
- <span>Tutte le Domande</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">← Home</span>
- </div>
- <div class="questions-viewer-wrap">
- <div class="question-stage">
- <div class="ngl-card single-question-card" id="questionViewerCard">
- <button class="question-arrow prev" onclick="changeQuestion(-1)">&#10094;</button>
- <div class="ngl-header red-gradient" id="questionViewerHeader">Anonimo</div>
- <div class="ngl-body"><p class="question-text" id="questionViewerText">Quali sono le proposte principali per strutturare le assemblee?</p></div>
- <div class="question-bottom-hole">
- <button class="answer-bubble" onclick="toggleAnswerPocket()">
- <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
- </button>
- </div>
- <button class="question-arrow next" onclick="changeQuestion(1)">&#10095;</button>
- </div>
- </div>
- <div class="question-counter" id="questionCounter">Domanda 1 di 1</div>
- <div id="answerPocket" class="question-answer-pocket">
- <textarea id="questionAnswerText" class="filter-input" placeholder="Scrivi una risposta alla domanda..."></textarea>
- <button class="answer-send-btn" onclick="submitQuestionAnswer()">Rispondi</button>
- </div>
- </div>
- </div>
-
-
- <!-- ================= VISTA: VEDI TUTTO MARKETPLACE (CON RICERCA E PREZZO) ================= -->
- <div id="view-all-market" class="app-view">
- <div class="view-title-banner">
- <span>Tutti gli Annunci</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">← Home</span>
- </div>
-
- <!-- Barra dei Filtri Interattivi -->
- <div class="search-filter-wrapper">
- <input type="text" id="marketSearch" class="filter-input" placeholder=" Cerca parola chiave o autore..." oninput="filterMarketplace()">
- <input type="number" id="marketPriceMax" class="filter-input" placeholder=" Prezzo massimo (€)..." oninput="filterMarketplace()">
- </div>
-
- <!-- Griglia Prodotti Filtrabili -->
- <div class="market-grid-container" id="gridMarketplace">
-
- <div class="market-card-scroll market-card-grid" data-title="Le basi della fisica" data-author="Francesco Cerri" data-price="35">
- <div class="market-info-scroll">
- <h4>Le basi della fisica</h4>
- <span class="market-author-scroll">Francesco Cerri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Matematica" data-author="Elena Gatti (5°B)" data-price="12">
- <div class="market-info-scroll">
- <h4>Ripetizioni Matematica</h4>
- <span class="market-author-scroll">Elena Gatti (5°B)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Compendio Storia" data-author="Alessandro Neri" data-price="18">
- <div class="market-info-scroll">
- <h4>Compendio Storia</h4>
- <span class="market-author-scroll">Alessandro Neri</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">18€</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span>
- </div>
- </div>
- </div>
-
- <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Chimica" data-author="Marco Polo (4°A)" data-price="15">
- <div class="market-info-scroll">
- <h4>Ripetizioni Chimica</h4>
- <span class="market-author-scroll">Marco Polo (4°A)</span>
- <div class="market-footer-scroll">
- <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">15€/h</span>
- <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span>
- </div>
- </div>
- </div>
-
- <div id="marketDynamicList" style="display: contents;"></div>
- </div>
- </div>
-
-
-
- <!-- ================= VISTA: CREA DOMANDA ================= -->
- <div id="view-add-question" class="app-view">
- <div class="view-title-banner">
- <span>Fai una Domanda</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span>
- </div>
- <div class="section-container question-compose-panel">
- <p style="font-size:13px; color:#64748b; line-height:1.4;">La tua domanda sar&agrave; completamente anonima.</p>
- <textarea id="newQuestionText" class="filter-input" style="height: 116px; resize: none;" placeholder="Scrivi qui la tua domanda..." oninput="updateQuestionPreview()"></textarea>
- <div class="question-preview-title">Scegli il colore della card</div>
- <div class="question-color-row">
- <button class="question-color-choice orange-gradient active" type="button" aria-label="Arancione" onclick="chooseQuestionGradient('orange-gradient', this)"></button>
- <button class="question-color-choice red-gradient" type="button" aria-label="Rosso" onclick="chooseQuestionGradient('red-gradient', this)"></button>
- <button class="question-color-choice purple-gradient" type="button" aria-label="Viola" onclick="chooseQuestionGradient('purple-gradient', this)"></button>
- <button class="question-color-choice blue-gradient" type="button" aria-label="Blu" onclick="chooseQuestionGradient('blue-gradient', this)"></button>
- <button class="question-color-choice green-gradient" type="button" aria-label="Verde" onclick="chooseQuestionGradient('green-gradient', this)"></button>
- </div>
- <div class="question-preview-title">Anteprima</div>
- <div class="ngl-card question-preview-card">
- <div class="ngl-header orange-gradient" id="questionPreviewHeader">Anonimo</div>
- <div class="ngl-body"><p class="question-text" id="questionPreviewText">Scrivi una domanda per vedere l'anteprima...</p></div>
- </div>
- <button onclick="inviaDomanda()" style="width: 100%; padding: 14px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor:pointer;">Invia in Anonimo</button>
- </div>
- </div>
-
- <!-- ================= VISTA: CREA ANNUNCIO ================= -->
- <div id="view-add-market" class="app-view">
- <div class="view-title-banner">
- <span>Nuovo Annuncio</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span>
- </div>
- <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
- <input type="text" id="marketTitle" class="filter-input" placeholder="Titolo (es. Ripetizioni Matematica)">
- <input type="text" id="marketAuthor" class="filter-input" placeholder="Il tuo nome (es. Marco 5&deg;A)">
- <input type="number" id="marketPrice" class="filter-input" placeholder="Prezzo (&euro;)">
- <select id="marketType" class="filter-input">
- <option value="Libro">Libro in vendita</option>
- <option value="Studio">Ripetizioni/Studio</option>
- </select>
- <button onclick="inviaAnnuncio()" style="width: 100%; padding: 14px; margin-top: 10px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor:pointer;">Pubblica Annuncio</button>
- </div>
- </div>
-
- <!-- ================= VISTA 2: OBIETTIVI (PROGRAMMA) ================= -->
- <div id="view-obiettivi" class="app-view">
- <div class="view-title-banner">Programma Elettorale e Candidati</div>
- <div class="section-container">
-
- <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">FR</div>
- <div class="candidate-meta">
- <h3>Federico Rossi</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 1: Wi-Fi Stabile.</strong> Potenziare la stabilità della rete Wi-Fi in tutte le aule e digitalizzare la burocrazia per le richieste studentesche.
- </div>
- </div>
-
- <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">MB</div>
- <div class="candidate-meta">
- <h3>Marco Bianchi</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 2: Più Convenzioni.</strong> Ampliare la rete dei negozi partner e delle librerie della zona per offrire sconti reali tramite l'app della lista.
- </div>
- </div>
-
- <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">SG</div>
- <div class="candidate-meta">
- <h3>Sofia Galli</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 3: Assemblee Interattive.</strong> Introdurre sistemi di dibattito a votazione istantanea digitale e ospitare esperti esterni scelti direttamente da voi.
- </div>
- </div>
-
- </div>
- </div>
-
-
- <!-- ================= VISTA 3: ARCHIVIO DRIVE CONDIVISO ================= -->
- <div id="view-archivio" class="app-view">
- <div class="view-title-banner">Drive Appunti</div>
-
- <div class="search-filter-wrapper" style="margin-top: 10px;">
- <input type="text" id="archiveSearch" class="filter-input" placeholder=" Cerca materia, argomento o docente..." oninput="filterArchive()">
- </div>
-
- <div class="section-container" id="archiveContainer">
- <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti del nostro istituto</p>
-
- <div id="archiveDynamicList"></div>
- </div>
- <button class="floating-add-btn" onclick="navigateTo('view-carica-appunti', null, 'CARICA APPUNTI')">+</button>
- </div>
-
-
- <!-- ================= VISTA 4: CALENDARIO ASSEMBLEE ================= -->
- <div id="view-calendario" class="app-view">
- <div class="view-title-banner">Calendario Assemblee</div>
- <section class="section-container main-calendar-wrapper">
-
- <div class="calendar-widget">
- <div class="calendar-widget-header">
- <button class="cal-arrow" onclick="changeMonth(-1)">&#10094;</button>
- <div class="calendar-month-title" id="calendarMonthYear">Giugno 2026</div>
- <button class="cal-arrow" onclick="changeMonth(1)">&#10095;</button>
- </div>
- <div class="calendar-grid" id="calendarGrid"></div>
- </div>
-
- <div class="section-header-inline">
- <h3 class="section-title">Elenco Assemblee del Mese</h3>
- </div>
- <div class="calendar-list" id="calendarEventList"></div>
- </section>
- <button class="floating-add-btn" onclick="navigateTo('view-proponi-assemblea', null, 'PROPONI ASSEMBLEA')">+</button>
- </div>
-
- <!-- ================= VISTA: PROPONI UN ASSEMBLEA ================= -->
- <div id="view-proponi-assemblea" class="app-view">
- <div class="view-title-banner">
- <span>Proponi un'Assemblea</span>
- <span class="back-link" onclick="navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE')">&#8592; Annulla</span>
- </div>
- <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
- <p style="font-size:13px; color:#64748b; line-height:1.4;">Inviaci la tua proposta per una nuova assemblea. Specifica il titolo e cosa vorresti fare.</p>
- <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)">
- <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea>
- <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button>
- </div>
- </div>
-
- <!-- ================= VISTA: INVIA UNA PROPOSTA (VOTAZIONE) ================= -->
- <div id="view-invia-proposta" class="app-view">
- <div class="view-title-banner">
- <span>Invia una Proposta</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
- </div>
- <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
- <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p>
- <input type="text" id="votazioneTitolo" class="filter-input" placeholder="Titolo della proposta">
- <select id="votazioneCategoria" class="filter-input">
- <option value="Evento">Evento</option>
- <option value="Servizio">Servizio</option>
- <option value="Miglioria">Miglioria</option>
- <option value="Altro">Altro</option>
- </select>
- <textarea id="votazioneDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea>
- <button onclick="inviaPropostaVotazione()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button>
- </div>
- </div>
-
- <!-- ================= VISTA: VOTAZIONI ================= -->
- <div id="view-votazioni" class="app-view">
- <div class="view-title-banner">
- <span>Votazioni</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
- </div>
- <div class="section-container">
- <div class="voting-proposals-container" id="proposteAttiveList">
- <!-- Caricate dinamicamente -->
- </div>
-
- <div class="chart-wrapper" style="margin-top: 30px;">
- <canvas id="votingChart"></canvas>
- </div>
- </div>
- </div>
-
- <!-- ================= VISTA: ARCHIVIO STORICO VOTAZIONI ================= -->
- <div id="view-archivio-storico-votazioni" class="app-view">
- <div class="view-title-banner">
- <span>Archivio Votazioni</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span>
- </div>
- <div class="section-container" id="archivioVotazioniList">
- <!-- Caricato dinamicamente -->
- </div>
- </div>
-
- <!-- ================= VISTA: CARICA APPUNTI ================= -->
- <!-- ================= VISTA: ISCRIZIONE TORNEO ================= -->
- <div id="view-iscrizione-torneo" class="app-view">
- <div class="view-title-banner">
- <span id="titoloTorneoIscrizione">Iscrizione Torneo</span>
- <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span>
- </div>
- <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
- <input type="text" id="iscrizioneNome" class="filter-input" placeholder="Il tuo Nome">
- <input type="text" id="iscrizioneCognome" class="filter-input" placeholder="Il tuo Cognome">
- <input type="text" id="iscrizioneClasse" class="filter-input" placeholder="La tua Classe">
- <input type="email" id="iscrizioneEmail" class="filter-input" placeholder="La tua Email">
-
- <div id="ruoloTorneoSezione" style="margin-top: 10px;">
- <p style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px;">Ti stai iscrivendo come:</p>
- <div style="display: flex; gap: 20px;">
- <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;">
- <input type="radio" name="ruoloTorneo" value="spettatore" checked onclick="toggleSezioneCapitano(false)"> Spettatore
- </label>
- <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;">
- <input type="radio" name="ruoloTorneo" value="capitano" onclick="toggleSezioneCapitano(true)"> Capitano
- </label>
- </div>
- </div>
-
- <!-- SEZIONE AGGIUNTIVA PER IL CAPITANO -->
- <div id="sezioneCapitano" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
- <input type="text" id="squadraNome" class="filter-input" placeholder="Nome della Squadra">
- <input type="number" id="squadraMembriCount" class="filter-input" placeholder="Numero membri (escluso te)" oninput="generaCampiMembri(this.value)">
-
- <div id="containerMembriSquadra" style="display: flex; flex-direction: column; gap: 15px;">
- <!-- I campi dei membri verranno generati qui -->
- </div>
- </div>
-
- <button onclick="inviaIscrizioneTorneo()" class="answer-send-btn" style="margin-top: 20px;">Invia iscrizione</button>
- </div>
- </div>
-
-
- <div id="view-carica-appunti" class="app-view">
- <div class="view-title-banner">
- <span>Carica i tuoi Appunti</span>
- <span class="back-link" onclick="navigateTo('view-archivio', null, 'DRIVE APPUNTI')">&#8592; Annulla</span>
- </div>
- <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;">
- <p style="font-size:13px; color:#64748b; line-height:1.4;">Condividi i tuoi appunti con gli altri studenti. Compila i campi e seleziona il file.</p>
- <input type="text" id="appuntiMateria" class="filter-input" placeholder="Materia (es. Matematica)">
- <input type="text" id="appuntiArgomento" class="filter-input" placeholder="Argomento (es. Derivate)">
- <input type="text" id="appuntiDocente" class="filter-input" placeholder="Docente">
- <textarea id="appuntiNote" class="filter-input" style="height: 80px; resize: none;" placeholder="Eventuali note..."></textarea>
-
- <div style="background: white; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('appuntiFile').click()">
- <span style="font-size: 13px; color: #64748b;" id="fileNameDisplay">Seleziona un file (PDF, Immagine...)</span>
- <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)">
- </div>
-
- <div id="uploadProgressContainer" class="progress-container">
- <div id="uploadProgressBar" class="progress-bar"></div>
- <p id="uploadProgressText" class="progress-text">Caricamento: 0%</p>
- </div>
-
- <button id="btnInviaAppunti" onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button>
- </div>
- </div>
-
-
- <!-- ================= VISTA 5: IMPOSTAZIONI CAMBIO COLORE ================= -->
- <div id="view-settings" class="app-view">
- <div class="view-title-banner">Cambia il Colore dell'App</div>
- <section class="section-container">
- <p style="font-size: 13.5px; color: #64748b; margin-bottom: 20px; line-height: 1.4;">
- Seleziona un tema. L'intera interfaccia, comprese le barre e i gradienti, cambierà istantaneamente configurazione cromatica.
- </p>
- <div class="color-picker-grid">
- <div class="color-option-card" onclick="setAppTheme('#0f2d59', '#17427a', '#17427a', '#93c5fd')">
- <div class="color-circle-preview" style="background: linear-gradient(135deg, #0f2d59, #17427a);"></div>
- <span>Blu Classico</span>
- </div>
- <div class="color-option-card" onclick="setAppTheme('#064e3b', '#059669', '#059669', '#a7f3d0')">
- <div class="color-circle-preview" style="background: linear-gradient(135deg, #064e3b, #059669);"></div>
- <span>Verde Smeraldo</span>
- </div>
- <div class="color-option-card" onclick="setAppTheme('#7f1d1d', '#dc2626', '#dc2626', '#fca5a5')">
- <div class="color-circle-preview" style="background: linear-gradient(135deg, #7f1d1d, #dc2626);"></div>
- <span>Rosso Fuoco</span>
- </div>
- <div class="color-option-card" onclick="setAppTheme('#4c1d95', '#7c3aed', '#7c3aed', '#ddd6fe')">
- <div class="color-circle-preview" style="background: linear-gradient(135deg, #4c1d95, #7c3aed);"></div>
- <span>Viola Regale</span>
- </div>
- </div>
- </section>
- </div>
-
- <!-- MODALE DOWNLOAD CON PROGRESSO -->
- <div id="downloadModal" class="download-modal">
- <div class="download-modal-content">
- <h3 id="downloadFileName">File.pdf</h3>
- <p>Preparazione del download...</p>
- <div class="progress-container" style="display: block;">
- <div id="downloadProgressBar" class="progress-bar"></div>
- </div>
- <p id="downloadProgressText" class="progress-text" style="margin-top: 8px;">0%</p>
- </div>
- </div>
-
-
- <!-- NAVBAR FLUTTUANTE IN BASSO -->
- <nav class="bottom-nav">
- <button class="nav-item active" onclick="navigateTo('view-home', this, 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">
- <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
- </button>
- <button class="nav-item" onclick="navigateTo('view-obiettivi', this, 'IL NOSTRO PROGRAMMA')">
- <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
- </button>
- <button class="nav-item center-item" onclick="navigateTo('view-archivio', this, 'DRIVE APPUNTI')">
- <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
- </button>
- <button class="nav-item" onclick="navigateTo('view-calendario', this, 'AGENDA ASSEMBLEE')">
- <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
- </button>
- <button class="nav-item" onclick="navigateTo('view-settings', this, 'IMPOSTAZIONI TEMA')">
- <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
- </button>
- </nav>
-
- </div>
-
-
- <!-- SCRIPT LOGICI DI FUNZIONAMENTO -->
- <script>
- // 0. LOGICA TEMPI RELATIVI PER I POST
- function updateRelativeTimes() {
- const now = new Date();
- document.querySelectorAll('.post-date[data-timestamp]').forEach(el => {
- const timestamp = new Date(el.dataset.timestamp);
- const diffMs = now - timestamp;
- const diffMin = Math.floor(diffMs / 60000);
- const diffOre = Math.floor(diffMs / 3600000);
- const diffGiorni = Math.floor(diffMs / 86400000);
-
- if (diffMin < 60) {
- // Sotto i 60 minuti: mostra l'orario originale HH:mm
- const hh = String(timestamp.getHours()).padStart(2, '0');
- const mm = String(timestamp.getMinutes()).padStart(2, '0');
- el.textContent = `${hh}:${mm}`;
- } else if (diffOre < 24) {
- el.textContent = `${diffOre} ${diffOre === 1 ? 'ora' : 'ore'} fa`;
- } else if (diffGiorni === 1) {
- el.textContent = "ieri";
- } else {
- el.textContent = `${diffGiorni} giorni fa`;
- }
- });
- }
- updateRelativeTimes();
- setInterval(updateRelativeTimes, 60000); // Aggiorna ogni minuto
-
- // 1. AUTO SCROLL NOTIZIE
- let currentSlide = 0;
- const slides = document.querySelectorAll('.news-slide');
- function showSlide(index) {
- if(slides.length === 0) return;
- slides[currentSlide].classList.remove('active');
- currentSlide = (index + slides.length) % slides.length;
- slides[currentSlide].classList.add('active');
- }
- function moveSlide(step) { showSlide(currentSlide + step); }
- setInterval(() => { moveSlide(1); }, 10000);
-
- // 2. GESTIONE LIKE REALE INTERATTIVA
- function toggleLike(button, baseCount) {
- button.classList.toggle('liked');
- const countSpan = button.querySelector('.like-count');
- countSpan.textContent = button.classList.contains('liked') ? baseCount + 1 : baseCount;
- }
-
- // 3. NAVIGAZIONE SPA TRA LE SCHERMATE
- function navigateTo(viewId, navButton, titleText) {
- document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
- document.getElementById(viewId).classList.add('active');
-
- // Gestisci l'attivazione grafica delle icone navbar solo se non è una sotto-vista (es. vedi tutto)
- if(navButton && navButton.classList.contains('nav-item')) {
- document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
- navButton.classList.add('active');
- }
-
- document.getElementById('headerTitle').innerHTML = titleText;
-
- if(viewId === 'view-calendario') {
- renderCalendar();
- }
- if(viewId === 'view-archivio') {
- if(typeof window.caricaArchivioAppunti === 'function') window.caricaArchivioAppunti();
- }
- }
-
- // 4. FILTRO LIVE DEL MARKETPLACE (TESTO + PREZZO)
- function filterMarketplace() {
- if(typeof window.filterMarketplace === 'function') {
- return window.filterMarketplace();
- }
- }
-
- // 5. CAMBIO COLORE REALE CON INIEZIONE NELLE VARIABILI ROOT
- function setAppTheme(startColor, endColor, accentColor, lightAccent) {
- document.documentElement.style.setProperty('--primary-grad-start', startColor);
- document.documentElement.style.setProperty('--primary-grad-end', endColor);
- document.documentElement.style.setProperty('--accent-color', accentColor);
- document.documentElement.style.setProperty('--accent-light', lightAccent);
- }
-
- // 6. MOTORE CALENDARIO DINAMICO REALE SULLE ASSEMBLEE
- let currentDate = new Date(2026, 5, 1); // Giugno 2026
-
- const eventsDatabase = {
- "2026-06-05": [{ title: "Assemblea Straordinaria Digitale", time: "Ore 10:00", loc: "Online via App" }],
- "2026-06-12": [{ title: "Assemblea d'Istituto Generale", time: "Ore 09:00", loc: "Aula Magna" }],
- "2026-06-19": [{ title: "Assemblea Coordinamento Comitati", time: "Ore 14:30", loc: "Aula 12" }],
- "2026-06-26": [{ title: "Assemblea Plenaria di Fine Anno", time: "Ore 11:30", loc: "Cortile Esterno" }]
- };
-
- const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
- const shortMonths = ["GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUGL", "AGO", "SET", "OTT", "NOV", "DIC"];
-
- function changeMonth(direction) {
- currentDate.setMonth(currentDate.getMonth() + direction);
- renderCalendar();
- }
-
- function renderCalendar() {
- const year = currentDate.getFullYear();
- const month = currentDate.getMonth();
- document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
-
- const grid = document.getElementById('calendarGrid');
- grid.innerHTML = '';
-
- const weekdays = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
- weekdays.forEach(day => {
- const label = document.createElement('div');
- label.className = 'weekday-label';
- label.textContent = day;
- grid.appendChild(label);
- });
-
- const firstDayIndex = new Date(year, month, 1).getDay();
- const blanks = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
- for (let i = 0; i < blanks; i++) {
- const emptyCell = document.createElement('div');
- emptyCell.className = 'calendar-day empty';
- grid.appendChild(emptyCell);
- }
-
- const daysInMonth = new Date(year, month + 1, 0).getDate();
-
- for (let day = 1; day <= daysInMonth; day++) {
- const dayCell = document.createElement('div');
- dayCell.className = 'calendar-day';
- dayCell.textContent = day;
-
- const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
- if (eventsDatabase[dateString]) {
- dayCell.classList.add('has-event');
- }
-
- dayCell.onclick = () => {
- document.querySelectorAll('.calendar-day').forEach(c => c.classList.remove('selected'));
- dayCell.classList.add('selected');
- showEventsForDate(dateString, day, month);
- };
-
- grid.appendChild(dayCell);
- }
- showMonthDefaultEvents(year, month);
- }
-
- function showEventsForDate(dateString, day, month) {
- const container = document.getElementById('calendarEventList');
- container.innerHTML = '';
- const events = eventsDatabase[dateString];
- if (events && events.length > 0) {
- events.forEach(ev => {
- container.innerHTML += `
- <div class="calendar-row">
- <div class="date-badge">
- <span class="badge-day">${day}</span>
- <span class="badge-month">${shortMonths[month]}</span>
- </div>
- <div class="event-details">
- <h4>${ev.title}</h4>
- <p>${ev.time} - ${ev.loc}</p>
- </div>
- </div>
- `;
- });
- } else {
- container.innerHTML = `<p style="font-size:13px; color:#64748b; text-align:center; padding:10px;">Nessuna assemblea programmata per questa data.</p>`;
- }
- }
-
- function showMonthDefaultEvents(year, month) {
- const container = document.getElementById('calendarEventList');
- container.innerHTML = '';
- let found = false;
- Object.keys(eventsDatabase).forEach(dateStr => {
- const [evYear, evMonth, evDay] = dateStr.split('-').map(Number);
- if (evYear === year && evMonth === (month + 1)) {
- found = true;
- eventsDatabase[dateStr].forEach(ev => {
- container.innerHTML += `
- <div class="calendar-row" style="cursor:pointer;" onclick="highlightCalendarDay(${evDay})">
- <div class="date-badge">
- <span class="badge-day">${evDay}</span>
- <span class="badge-month">${shortMonths[month]}</span>
- </div>
- <div class="event-details">
- <h4>${ev.title}</h4>
- <p>${ev.time} - ${ev.loc}</p>
- </div>
- </div>
- `;
- });
- }
- });
- if(!found) {
- container.innerHTML = `<p style="font-size:13px; color:#64748b; text-align:center; padding:10px;">Nessun evento pianificato per questo mese.</p>`;
- }
- }
-
- function highlightCalendarDay(day) {
- document.querySelectorAll('.calendar-day').forEach(c => {
- if(c.textContent == day && !c.classList.contains('empty')) {
- c.classList.add('selected');
- c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
- } else {
- c.classList.remove('selected');
- }
- });
- }
+<!DOCTYPE html> 
+<html lang="it"> 
+<head> 
+ <meta charset="UTF-8"> 
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+ <title>App Lista 2</title> 
+  
+ <!-- Tag per l'effetto App Nativa (PWA) --> 
+ <link rel="manifest" href="manifest.json"> 
+ <meta name="apple-mobile-web-app-capable" content="yes"> 
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
+ <meta name="apple-mobile-web-app-title" content="Lista 2"> 
+ <meta name="mobile-web-app-capable" content="yes"> 
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+ 
+ <style> 
+ /* ========================================================================== 
+ VARIABILI CSS PER IL CAMBIO COLORE REAL-TIME 
+ ========================================================================== */ 
+ :root { 
+ --primary-grad-start: #0f2d59; 
+ --primary-grad-end: #17427a; 
+ --accent-color: #17427a; 
+ --accent-light: #93c5fd; 
+ } 
+ 
+ * { 
+ margin: 0; 
+ padding: 0; 
+ box-sizing: border-box; 
+ -webkit-tap-highlight-color: transparent; 
+ } 
+ 
+ body { 
+ background-color: #0e1e38; 
+ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+ display: flex; 
+ justify-content: center; 
+ align-items: flex-start; 
+ min-height: 100vh; 
+ color: #1a202c; 
+ } 
+ 
+ /* CONTAINER TEMPLATE MOBILE */ 
+ .app-container { 
+ width: 100%; 
+ max-width: 412px; 
+ background-color: #f8fafc; 
+ min-height: 100vh; 
+ position: relative; 
+ padding-bottom: 110px; 
+ overflow-y: auto; 
+ overflow-x: hidden; 
+ box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+ } 
+ .app-container::-webkit-scrollbar { display: none; } 
+ 
+ /* NAVIGAZIONE DELLE VISTE (SINGLE PAGE APPLICATION) */ 
+ .app-view { 
+ display: none; 
+ animation: smoothFade 0.4s ease-out; 
+ } 
+ .app-view.active { 
+ display: block; 
+ } 
+ 
+ /* HEADER SFERICO SUPERIORE */ 
+ .app-header { 
+ background: linear-gradient(180deg, var(--primary-grad-start) 0%, var(--primary-grad-end) 100%); 
+ padding: 40px 24px 50px 24px; 
+ border-radius: 0 0 50% 50% / 0 0 20% 20%; 
+ text-align: center; 
+ position: relative; 
+ transition: background 0.3s ease; 
+ } 
+ 
+ .logos-container { 
+ display: flex; 
+ justify-content: center; 
+ align-items: center; 
+ gap: 20px; 
+ margin-bottom: 18px; 
+ } 
+ 
+ .header-logo-free { 
+ height: 48px; 
+ max-width: 110px; 
+ object-fit: contain; 
+ filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2)); 
+ } 
+ 
+ .main-title { 
+ color: #ffffff; 
+ font-size: 23px; 
+ font-weight: 800; 
+ letter-spacing: 0.8px; 
+ line-height: 1.25; 
+ } 
+ 
+ 
+ /* SEZIONE NOTIZIE (STACCATA DALL'HEADER) */ 
+ .news-slider-section { 
+ margin: 24px 20px 28px 20px; 
+ background: #ffffff; 
+ border-radius: 18px; 
+ padding: 16px 44px; 
+ box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); 
+ position: relative; 
+ min-height: 85px; 
+ z-index: 10; 
+ } 
+ .news-slide { display: none; text-align: center; } 
+ .news-slide.active { display: block; animation: smoothFade 0.4s; } 
+ .news-tag { 
+ display: inline-block; 
+ background: #e0f2fe; 
+ color: #0369a1; 
+ font-size: 10.5px; 
+ font-weight: 700; 
+ padding: 3px 10px; 
+ border-radius: 9999px; 
+ margin-bottom: 6px; 
+ text-transform: uppercase; 
+ } 
+ .news-slide p { font-size: 13px; color: #475569; font-weight: 500; line-height: 1.4; } 
+ .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; padding: 8px; } 
+ .slider-arrow.prev { left: 12px; } 
+ .slider-arrow.next { right: 12px; } 
+ 
+ /* STRUTTURA GENERALE DELLE SEZIONI COINVOLTE */ 
+ .section-container { padding: 0 20px; margin-bottom: 28px; } 
+ .section-header-inline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; } 
+ .section-title { font-size: 17.5px; font-weight: 700; color: #0f172a; } 
+ .section-title-margin { font-size: 17.5px; font-weight: 700; color: #0f172a; margin-bottom: 18px; } 
+ .vedi-tutto { font-size: 12.5px; color: var(--accent-color); text-decoration: none; font-weight: 700; cursor: pointer; } 
+ 
+ /* CONTENITORI DI SCROLL ORIZZONTALE */ 
+ .posts-scroll-container, .collab-scroll-container, .questions-scroll-container, .market-scroll-container { 
+ display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; margin-right: -20px; padding-right: 20px; scrollbar-width: none; 
+ } 
+ .posts-scroll-container::-webkit-scrollbar, .collab-scroll-container::-webkit-scrollbar, .questions-scroll-container::-webkit-scrollbar, .market-scroll-container::-webkit-scrollbar { display: none; } 
+ 
+ /* CARDS POST DEI RAPPRESENTANTI */ 
+ .post-card { 
+ min-width: 305px; max-width: 305px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #f1f5f9; display: flex; flex-direction: column; 
+ } 
+ .post-author-strip { background-color: var(--accent-color); padding: 12px 16px; display: flex; align-items: center; position: relative; transition: background 0.3s; } 
+ .author-info { display: flex; flex-direction: column; } 
+ .author-name { color: #ffffff; font-size: 13.5px; font-weight: 600; } 
+ .author-role { color: var(--accent-light); font-size: 11px; } 
+ .post-date { position: absolute; right: 16px; color: #e2e8f0; opacity: 0.8; font-size: 10.5px; } 
+ .post-content { padding: 16px; font-size: 13.5px; color: #334155; line-height: 1.45; flex-grow: 1; } 
+ .post-actions-bar { display: flex; gap: 20px; padding: 10px 16px; border-top: 1px solid #f1f5f9; background: #fafbfc; } 
+ .action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600; padding: 4px 0; } 
+ .action-btn svg { width: 17px; height: 17px; fill: #64748b; transition: fill 0.2s; } 
+ .like-btn.liked svg { fill: #ef4444; } 
+ .like-btn.liked { color: #ef4444; } 
+ 
+ /* COLLABORAZIONI CON EFFETTO SUSPENSE */ 
+ .collab-card { min-width: 210px; width: 210px; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; } 
+ .collab-img-container { width: 100%; height: 115px; background: #f1f5f9; } 
+ .collab-img { width: 100%; height: 100%; object-fit: cover; } 
+ .collab-text-content { padding: 14px; } 
+ .collab-text-content h3 { font-size: 14px; color: #0f172a; margin-bottom: 4px; font-weight: 700; } 
+ .collab-text-content p { font-size: 11.5px; color: #475569; line-height: 1.35; } 
+  
+ .collab-card.suspense { opacity: 0.6; filter: blur(0.4px); pointer-events: none; } 
+ .suspense-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #e2e8f0; } 
+ .lock-svg { width: 26px; height: 26px; fill: #475569; } 
+ 
+ /* DOMANDE ANONIME */ 
+ .ngl-card { min-width: 230px; width: 230px; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; border: 1px solid #f1f5f9; } 
+ .ngl-header { padding: 14px; text-align: center; color: #ffffff; font-weight: 700; font-size: 13.5px; letter-spacing: 0.6px; text-transform: uppercase; border-radius: 24px 24px 0 0; } 
+ .ngl-body { padding: 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 110px; text-align: center; } 
+ .question-text { font-size: 13.5px; color: #1e293b; font-weight: 600; line-height: 1.4; } 
+ .orange-gradient { background: linear-gradient(135deg, #ff9233, #ff5252); } 
+ .red-gradient { background: linear-gradient(135deg, #f43f5e, #f59e0b); } 
+ .purple-gradient { background: linear-gradient(135deg, #8b5cf6, #ec4899); } 
+ .blue-gradient { background: linear-gradient(135deg, #06b6d4, #3b82f6); } 
+  
+ .create-card .prompt-text, .create-card-market .prompt-text { font-size: 13.5px; color: #1e293b; font-weight: 700; margin-bottom: 12px; } 
+ .add-question-btn, .add-market-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.3s; } 
+ 
+ /* MARKETPLACE SULLA HOME */ 
+ .market-card-scroll { min-width: 200px; width: 200px; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; display: flex; flex-direction: column; } 
+ .market-info-scroll { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; } 
+ .market-info-scroll h4 { font-size: 13px; color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
+ .market-author-scroll { font-size: 11px; color: #64748b; margin-bottom: 8px; display: block; } 
+ .market-footer-scroll { display: flex; justify-content: space-between; align-items: center; } 
+  
+ .create-card-market { min-width: 200px; width: 200px; background: #ffffff; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; } 
+ .market-create-body { display: flex; flex-direction: column; align-items: center; justify-content: center; } 
+ 
+ /* STRUTTURA PROPOSTE CANDIDATI */ 
+ .view-title-banner { padding: 24px 20px 10px 20px; font-size: 20px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; } 
+ .candidate-card { background: white; border-radius: 18px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; } 
+ .candidate-header { display: flex; align-items: center; gap: 14px; } 
+ .candidate-avatar-placeholder { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-grad-start), var(--primary-grad-end)); color: white; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; } 
+ .candidate-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; } 
+ .candidate-meta h3 { font-size: 15.5px; color: #0f172a; font-weight: 700; line-height: 1.2; } 
+ .candidate-meta span { font-size: 10.5px; color: #0284c7; font-weight: 700; background: #e0f2fe; padding: 3px 10px; border-radius: 20px; display: inline-block; } 
+ .candidate-goal-box { background: #f8fafc; border-left: 4px solid var(--accent-color); padding: 10px 12px; border-radius: 0 12px 12px 0; font-size: 13px; color: #334155; line-height: 1.4; } 
+ 
+ /* SEZIONI "VEDI TUTTO" (GRIGLIE E FILTRI) */ 
+ .back-link { font-size: 13px; color: var(--accent-color); text-decoration: none; font-weight: 700; cursor: pointer; } 
+ .search-filter-wrapper { padding: 0 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; } 
+ .filter-input { width: 100%; padding: 12px 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 13.5px; color: #1e293b; outline: none; } 
+ .filter-input::placeholder { color: #94a3b8; } 
+ .market-grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 0 20px; } 
+ .market-card-grid { width: 100% !important; min-width: 0 !important; } 
+ .vertical-list-container { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; } 
+ .vertical-list-container .ngl-card { width: 100% !important; min-width: 0 !important; } 
+ 
+ /* ARCHIVIO DOCUMENTI */ 
+ .archive-folder-row { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.01); } 
+ .folder-left-side { display: flex; align-items: center; gap: 14px; } 
+ .folder-icon-plate { width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; } 
+ .folder-icon-plate svg { width: 22px; height: 22px; fill: var(--accent-color); } 
+ .folder-titles h4 { font-size: 14px; color: #0f172a; font-weight: 700; } 
+ .folder-titles p { font-size: 11.5px; color: #64748b; } 
+ .download-arrow { font-size: 16px; color: #94a3b8; font-weight: bold; } 
+ 
+ /* CALENDARIO INTERATTIVO AVANZATO */ 
+ .calendar-widget { background: #ffffff; border-radius: 22px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 20px; } 
+ .calendar-widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } 
+ .calendar-month-title { font-size: 15px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; } 
+ .cal-arrow { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; color: #475569; cursor: pointer; display: flex; justify-content: center; align-items: center; } 
+ .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; } 
+ .weekday-label { font-size: 11px; font-weight: 700; color: #94a3b8; padding-bottom: 4px; } 
+ .calendar-day { font-size: 13px; font-weight: 600; padding: 8px 0; border-radius: 10px; color: #334155; position: relative; cursor: pointer; } 
+ .calendar-day.empty { pointer-events: none; } 
+ .calendar-day.has-event { background-color: #f0fdf4; color: #166534; font-weight: 700; } 
+ .calendar-day.has-event::after { content: ''; width: 5px; height: 5px; background: #22c55e; border-radius: 50%; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); } 
+ .calendar-day.selected { background-color: var(--accent-color) !important; color: #ffffff !important; } 
+ .calendar-day.selected::after { background: #ffffff; } 
+  
+ .main-calendar-wrapper .calendar-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; } 
+ .main-calendar-wrapper .calendar-row { display: flex; align-items: center; background: #ffffff; padding: 12px; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.02); } 
+ .main-calendar-wrapper .date-badge { background-color: var(--primary-grad-start); width: 48px; height: 48px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; margin-right: 14px; flex-shrink: 0; transition: background 0.3s; } 
+ .main-calendar-wrapper .badge-day { font-size: 16px; font-weight: 700; line-height: 1; } 
+ .main-calendar-wrapper .badge-month { font-size: 9px; font-weight: 700; opacity: 0.8; margin-top: 2px; } 
+ .main-calendar-wrapper .event-details h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; } 
+ .main-calendar-wrapper .event-details p { font-size: 11.5px; color: #64748b; margin-top: 2px; } 
+ 
+ /* CAMBIO COLORE */ 
+ .color-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 12px; } 
+ .color-option-card { background: white; border: 1px solid #f1f5f9; border-radius: 18px; padding: 14px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 8px; } 
+ .color-circle-preview { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); } 
+ .color-option-card span { font-size: 13px; font-weight: 600; color: #1e293b; } 
+ 
+ /* BOTTOM NAVBAR ESTRUSA */ 
+ .bottom-nav { 
+ position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 380px; background: #ffffff; height: 68px; border-radius: 35px; box-shadow: 0 12px 35px rgba(15, 45, 89, 0.16); display: flex; justify-content: space-around; align-items: center; padding: 0 12px; z-index: 999; border: 1px solid rgba(241, 245, 249, 0.8); 
+ } 
+ .nav-item { background: none; border: none; cursor: pointer; padding: 12px; display: flex; justify-content: center; align-items: center; } 
+ .nav-item svg { width: 24px; height: 24px; fill: #475569; transition: fill 0.2s, transform 0.2s; } 
+ .nav-item.active svg { fill: var(--accent-color); transform: scale(1.05); } 
+ 
+ /* Tasto Centrale Archivio Drive */ 
+ .center-item svg { fill: #ffffff !important; width: 24px; height: 24px; } 
+ .center-item { 
+ background: linear-gradient(135deg, var(--primary-grad-start) 0%, var(--primary-grad-end) 100%); width: 54px; height: 54px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 14px rgba(23, 66, 122, 0.35); transform: translateY(-16px); border: 4px solid #ffffff; transition: background 0.3s; 
+ } 
+ .center-item:active { transform: translateY(-16px) scale(0.95); } 
+ 
+ 
+ .green-gradient { background: linear-gradient(135deg, #10b981, #22c55e); } 
+ .question-compose-panel { display: flex; flex-direction: column; gap: 14px; } 
+ .question-color-row { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 2px 0 4px; } 
+ .question-color-choice { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 2px 9px rgba(15, 23, 42, 0.16); cursor: pointer; outline: 2px solid transparent; } 
+ .question-color-choice.active { outline-color: var(--accent-color); transform: scale(1.06); } 
+ .question-preview-title { font-size: 12px; color: #64748b; font-weight: 700; text-align: center; } 
+ .question-preview-card { margin: 0 auto; } 
+ .questions-viewer-wrap { padding: 0 20px; } 
+ .question-stage { position: relative; padding: 4px 34px 76px; } 
+ .single-question-card { width: 100% !important; min-width: 0 !important; min-height: 260px; position: relative; overflow: visible; } 
+ .single-question-card::before, .single-question-card::after { content: ''; position: absolute; top: 50%; width: 46px; height: 46px; border-radius: 50%; background: #f8fafc; transform: translateY(-50%); z-index: 2; } 
+ .single-question-card::before { left: -23px; } 
+ .single-question-card::after { right: -23px; } 
+ .single-question-card .ngl-body { min-height: 205px; padding: 24px 28px; } 
+ .question-bottom-hole { position: absolute; left: 50%; bottom: -30px; width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; transform: translateX(-50%); z-index: 3; } 
+ .question-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; font-size: 20px; font-weight: 800; cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; } 
+ .question-arrow.prev { left: -17px; } 
+ .question-arrow.next { right: -17px; } 
+ .answer-bubble { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; transition: transform 0.2s; } 
+ .answer-bubble:active { transform: translate(-50%, -50%) scale(0.9); } 
+ .question-counter { text-align: center; margin-top: -54px; margin-bottom: 12px; color: #64748b; font-size: 12px; font-weight: 700; } 
+ .question-answer-pocket { display: none; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); flex-direction: column; gap: 10px; } 
+ .question-answer-pocket.active { display: flex; animation: smoothFade 0.4s; } 
+ .question-answer-pocket textarea { min-height: 82px; resize: none; } 
+ .answer-send-btn { width: 100%; padding: 12px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 14px; cursor: pointer; } 
+ 
+ 
+ @keyframes smoothFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } 
+ 
+ .floating-add-btn { 
+  position: fixed; 
+  bottom: 105px; 
+  right: 20px; 
+  background: #000; 
+  color: #fff; 
+  border: none; 
+  border-radius: 12px; 
+  width: 50px; 
+  height: 50px; 
+  font-size: 30px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  cursor: pointer; 
+  z-index: 1000; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+ } 
+ 
+ @media (min-width: 412px) { 
+  .floating-add-btn { 
+  right: calc(50% - 186px); 
+  } 
+ } 
+
+ .note-card { 
+  background: white; 
+  border-radius: 18px; 
+  padding: 16px; 
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  margin-bottom: 12px; 
+ } 
+ .note-icon { 
+  width: 48px; 
+  height: 48px; 
+  background: #f1f5f9; 
+  border-radius: 12px; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-shrink: 0; 
+ } 
+ .note-icon svg { 
+  width: 24px; 
+  height: 24px; 
+  fill: var(--accent-color); 
+ } 
+ .note-info { 
+  flex-grow: 1; 
+ } 
+ .note-info h4 { 
+  font-size: 15px; 
+  color: #0f172a; 
+  font-weight: 700; 
+  margin-bottom: 2px; 
+ } 
+ .note-info p { 
+  font-size: 12px; 
+  color: #64748b; 
+  line-height: 1.4; 
+ } 
+ .note-info .note-meta { 
+  font-size: 11px; 
+  color: var(--accent-color); 
+  font-weight: 700; 
+  margin-top: 4px; 
+ } 
+
+ .tournament-card { 
+  min-width: 220px; 
+  background: white; 
+  border-radius: 20px; 
+  padding: 18px; 
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+  cursor: pointer; 
+ } 
+ .tournament-card h3 { 
+  font-size: 15px; 
+  color: #0f172a; 
+  margin-bottom: 6px; 
+ } 
+ .tournament-card p { 
+  font-size: 12px; 
+  color: #64748b; 
+ } 
+ .tournament-tag { 
+  display: inline-block; 
+  padding: 4px 10px; 
+  background: #f0fdf4; 
+  color: #166534; 
+  font-size: 10px; 
+  font-weight: 700; 
+  border-radius: 20px; 
+  margin-top: 10px; 
+ } 
+
+ .progress-container { 
+  display: none; 
+  width: 100%; 
+  height: 8px; 
+  background-color: #e2e8f0; 
+  border-radius: 999px; 
+  overflow: hidden; 
+  margin-top: 10px; 
+ } 
+ .progress-bar { 
+  width: 0%; 
+  height: 100%; 
+  background-color: var(--accent-color); 
+  transition: width 0.3s ease; 
+ } 
+ .progress-text { 
+  font-size: 11px; 
+  color: #64748b; 
+  text-align: center; 
+  margin-top: 4px; 
+ } 
+
+ /* MODALE DOWNLOAD */ 
+ .download-modal { 
+  display: none; 
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  background: rgba(15, 23, 42, 0.7); 
+  z-index: 2000; 
+  justify-content: center; 
+  align-items: center; 
+  backdrop-filter: blur(4px); 
+ } 
+ .download-modal-content { 
+  background: #ffffff; 
+  width: 90%; 
+  max-width: 320px; 
+  padding: 24px; 
+  border-radius: 24px; 
+  text-align: center; 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+ } 
+ .download-modal-content h3 { 
+  font-size: 16px; 
+  color: #0f172a; 
+  margin-bottom: 8px; 
+ } 
+ .download-modal-content p { 
+  font-size: 13px; 
+  color: #64748b; 
+  margin-bottom: 20px; 
+ } 
+
+ .voting-proposals-container { display: flex; flex-direction: column; gap: 16px; } 
+ .voting-card { background: white; border-radius: 18px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; } 
+ .voting-info { flex-grow: 1; } 
+ .voting-info h4 { font-size: 14px; color: #0f172a; font-weight: 700; margin-bottom: 4px; } 
+ .voting-info p { font-size: 12px; color: #64748b; line-height: 1.4; } 
+ .vota-btn { background: var(--accent-color); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; } 
+ .vota-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #94a3b8; } 
+ .chart-wrapper { width: 100%; max-width: 280px; margin: 0 auto; padding: 10px 0; } 
+ .archive-vote-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; } 
+ .archive-vote-header { display: flex; justify-content: space-between; align-items: center; } 
+ .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; } 
+ .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; } 
+ .archive-vote-details { font-size: 11.5px; color: #64748b; } 
+ </style> 
+</head> 
+<body> 
+ 
+ <div class="app-container"> 
+ 
+ <!-- HEADER GLOBALE --> 
+ <header class="app-header"> 
+ <div class="logos-container"> 
+ <img src="lista.png" alt="Logo Lista 2" class="header-logo-free"> 
+ <img src="123.png" alt="Logo Scuola" class="header-logo-free"> 
+ </div> 
+ <h1 class="main-title" id="headerTitle">BENVENUTI SULL'APP<br>DELLA LISTA 2</h1> 
+ </header> 
+ 
+ 
+ <!-- ================= VISTA 1: HOME ================= --> 
+ <div id="view-home" class="app-view active"> 
+  
+ <!-- NOTIZIE IN EVIDENZA --> 
+ <section class="news-slider-section"> 
+ <div class="news-slider" id="newsSlider"> 
+ <div class="news-slide active"> 
+ <span class="news-tag">Ultima Ora</span> 
+ <p>Le votazioni per i rappresentanti si avvicinano. Scopri il nostro programma!</p> 
+ </div> 
+ <div class="news-slide"> 
+ <span class="news-tag">Eventi</span> 
+ <p>Assemblea d'istituto fissata per questa settimana in aula magna. Non mancare!</p> 
+ </div> 
+ <div class="news-slide"> 
+ <span class="news-tag">Info</span> 
+ <p>Nuovi appunti di Diritto e Finanza caricati nel Drive proprio oggi.</p> 
+ </div> 
+ </div> 
+ <button class="slider-arrow prev" onclick="moveSlide(-1)">&#10094;</button> 
+ <button class="slider-arrow next" onclick="moveSlide(1)">&#10095;</button> 
+ </section> 
+ 
+ <!-- POST DEI RAPPRESENTANTI (Senza vedi tutto) --> 
+ <section class="section-container"> 
+ <h2 class="section-title-margin">Post dei Rappresentanti</h2> 
+ <div class="posts-scroll-container"> 
+ <div class="post-card"> 
+ <div class="post-author-strip"> 
+ <div class="author-info"> 
+ <h3 class="author-name">Federico Rossi</h3> 
+ <span class="author-role">Rappresentante d'Istituto</span> 
+ </div> 
+ <span class="post-date" data-timestamp="2026-07-02T11:45:00">12:30</span> 
+ </div> 
+ <div class="post-content"> 
+ <p>Ciao a tutti! Vi ricordo che venerdì alle 11 ci sarà l'assemblea studentesca generale in aula magna per raccogliere idee sulle proposte del prossimo trimestre. Passate parola!</p> 
+ </div> 
+ <div class="post-actions-bar"> 
+ <button class="action-btn like-btn" data-post-id="1" data-default-likes="0" onclick="toggleLike(this)"> 
+ <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
+ <span class="like-count">0</span> 
+ </button> 
+ </div> 
+ </div> 
+ <div class="post-card"> 
+ <div class="post-author-strip"> 
+ <div class="author-info"> 
+ <h3 class="author-name">Marco Bianchi</h3> 
+ <span class="author-role">Rappresentante d'Istituto</span> 
+ </div> 
+ <span class="post-date" data-timestamp="2026-07-01T09:00:00">Ieri</span> 
+ </div> 
+ <div class="post-content"> 
+ <p>Grandi ragazzi! Abbiamo appena chiuso l'accordo per rinnovare le convenzioni con i principali punti di ristoro vicino alla scuola. Trovate i dettagli subito sotto nelle collaborazioni!</p> 
+ </div> 
+ <div class="post-actions-bar"> 
+ <button class="action-btn like-btn" data-post-id="2" data-default-likes="0" onclick="toggleLike(this)"> 
+ <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
+ <span class="like-count">0</span> 
+ </button> 
+ </div> 
+ </div> 
+ </div> 
+ </section> 
+ 
+ <!-- COLLABORAZIONI (Senza vedi tutto, con 4 nuovi contratti bloccati e testo "Presto disponibile...") --> 
+ <section class="section-container"> 
+ <div class="section-header-inline"> 
+ <h2 class="section-title">Collaborazioni</h2> 
+ </div> 
+ <div class="collab-scroll-container"> 
+ <div class="collab-card"> 
+ <div class="collab-img-container"> 
+ <img src="pablo.jpg" alt="Pablo Picantes" class="collab-img"> 
+ </div> 
+ <div class="collab-text-content"> 
+ <h3>Pablo Picantes</h3> 
+ <p>Rinnovata la collaborazione: qualsiasi menu a 9.99 euro esibendo l'applicazione!</p> 
+ </div> 
+ </div> 
+ <!-- Nuovi partner in suspense con testo "Presto disponibile..." --> 
+ <div class="collab-card suspense"> 
+ <div class="collab-img-container"> 
+ <div class="suspense-placeholder"> 
+ <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> 
+ </div> 
+ </div> 
+ <div class="collab-text-content"> 
+ <h3>Presto disponibile...</h3> 
+ <p><i></i></p> 
+ </div> 
+ </div> 
+ <div class="collab-card suspense"> 
+ <div class="collab-img-container"> 
+ <div class="suspense-placeholder"> 
+ <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> 
+ </div> 
+ </div> 
+ <div class="collab-text-content"> 
+ <h3>Presto disponibile...</h3> 
+ <p><i></i></p> 
+ </div> 
+ </div> 
+ <div class="collab-card suspense"> 
+ <div class="collab-img-container"> 
+ <div class="suspense-placeholder"> 
+ <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> 
+ </div> 
+ </div> 
+ <div class="collab-text-content"> 
+ <h3>Presto disponibile...</h3> 
+ <p><i></i></p> 
+ </div> 
+ </div> 
+ <div class="collab-card suspense"> 
+ <div class="collab-img-container"> 
+ <div class="suspense-placeholder"> 
+ <svg class="lock-svg" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> 
+ </div> 
+ </div> 
+ <div class="collab-text-content"> 
+ <h3>Presto disponibile...</h3> 
+ <p><i></i></p> 
+ </div> 
+ </div> 
+ </div> 
+ </section> 
+ 
+ <!-- DOMANDE ANONIME --> 
+ <section class="section-container"> 
+ <div class="section-header-inline"> 
+ <h2 class="section-title">Domande Anonime</h2> 
+ <span class="vedi-tutto" onclick="navigateTo('view-all-questions', this, 'STORICO DOMANDE')">Vedi tutto</span> 
+ </div> 
+ <div class="questions-scroll-container" id="domandeHomeContainer"> 
+ <div class="ngl-card create-card"> 
+ <div class="ngl-header orange-gradient">Fai una domanda</div> 
+ <div class="ngl-body"> 
+ <p class="prompt-text">Chiedici quello che vuoi...</p> 
+ <button class="add-question-btn" onclick="navigateTo('view-add-question', this, 'FAI UNA DOMANDA')">+</button> 
+ </div> 
+ </div> 
+ <div class="ngl-card"> 
+ <div class="ngl-header red-gradient">Anonimo</div> 
+ <div class="ngl-body"> 
+ <p class="question-text">Quali sono le proposte principali per strutturare le assemblee?</p> 
+ </div> 
+ </div> 
+ <div class="ngl-card"> 
+ <div class="ngl-header purple-gradient">Anonimo</div> 
+ <div class="ngl-body"> 
+ <p class="question-text">Riusciremo ad avere sconti reali anche per i libri scolastici?</p> 
+ </div> 
+ </div> 
+ <div id="domandeDynamicHome" style="display: contents;"></div> 
+ </div> 
+ </section> 
+ 
+ <!-- MARKETPLACE & RIPETIZIONI --> 
+ <section class="section-container"> 
+ <div class="section-header-inline"> 
+ <h2 class="section-title">Marketplace & Ripetizioni</h2> 
+ <span class="vedi-tutto" onclick="navigateTo('view-all-market', this, 'MARKETPLACE COMPLETO')">Vedi tutto</span> 
+ </div> 
+ <div class="market-scroll-container" id="marketHomeContainer"> 
+  
+ <div class="create-card-market"> 
+ <div class="market-create-body"> 
+ <p class="prompt-text">Inizia a fare ripetizioni anche te!</p> 
+ <button class="add-market-btn" onclick="navigateTo('view-add-market', this, 'NUOVO ANNUNCIO')">+</button> 
+ </div> 
+ </div> 
+ 
+ <div class="market-card-scroll"> 
+ <div class="market-info-scroll"> 
+ <h4>Le basi della fisica</h4> 
+ <span class="market-author-scroll">Francesco Cerri</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ <div class="market-card-scroll"> 
+ <div class="market-info-scroll"> 
+ <h4>Ripetizioni Matematica</h4> 
+ <span class="market-author-scroll">Elena Gatti (5°B)</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span> 
+ </div> 
+ </div> 
+ </div> 
+ <div id="marketDynamicHome" style="display: contents;"></div> 
+ </div> 
+ </section> 
+
+ <!-- SEZIONE PROPOSTE E VOTAZIONI --> 
+ <section class="section-container"> 
+ <h2 class="section-title-margin">Proposte e Votazioni</h2> 
+ <div class="collab-scroll-container"> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-invia-proposta', null, 'INVIA UNA PROPOSTA')"> 
+ <h3>Invia una Proposta</h3> 
+ <p>Condividi le tue idee per migliorare la nostra scuola.</p> 
+ <span class="tournament-tag" style="background:#e0f2fe; color:#0369a1;">Apri</span> 
+ </div> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-votazioni', null, 'VOTAZIONI')"> 
+ <h3>Votazioni Attive</h3> 
+ <p>Partecipa alle votazioni in corso e guarda i risultati.</p> 
+ <span class="tournament-tag">Vota ora</span> 
+ </div> 
+  
+ <div class="tournament-card" onclick="navigateTo('view-archivio-storico-votazioni', null, 'ARCHIVIO VOTAZIONI')"> 
+ <h3>Archivio Votazioni</h3> 
+ <p>Scopri i risultati delle scorse edizioni e delle proposte approvate.</p> 
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">Storico</span> 
+ </div> 
+  
+ </div> 
+ </section> 
+ 
+ <!-- SEZIONE TORNEI --> 
+ <section class="section-container"> 
+ <h2 class="section-title-margin">Tornei</h2> 
+ <div class="collab-scroll-container" id="torneiHomeContainer"> 
+ <div class="tournament-card" style="opacity: 0.7; pointer-events: none; min-width: 220px;"> 
+ <h3>Altri tornei...</h3> 
+ <p>Nessun altro torneo ancora disponibile.</p> 
+ <span class="tournament-tag" style="background:#f1f5f9; color:#64748b;">In arrivo</span> 
+ </div> 
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Calcetto')" style="min-width: 220px;"> 
+ <h3>Torneo di Calcetto</h3> 
+ <p>Sfida le altre classi nel torneo più atteso dell'anno!</p> 
+ <span class="tournament-tag">Iscrizioni aperte</span> 
+ </div> 
+ <div class="tournament-card" onclick="window.apriIscrizioneTorneoStatico('Pallavolo')" style="min-width: 220px;"> 
+ <h3>Torneo di Pallavolo</h3> 
+ <p>Partecipa al torneo di pallavolo misto della scuola.</p> 
+ <span class="tournament-tag">Iscrizioni aperte</span> 
+ </div> 
+ </div> 
+ </section> 
+ </div> 
+ 
+ 
+ <!-- ================= VISTA: VEDI TUTTO DOMANDE ================= --> 
+ <div id="view-all-questions" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Tutte le Domande</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">← Home</span> 
+ </div> 
+ <div class="questions-viewer-wrap"> 
+ <div class="question-stage"> 
+ <div class="ngl-card single-question-card" id="questionViewerCard"> 
+ <button class="question-arrow prev" onclick="changeQuestion(-1)">&#10094;</button> 
+ <div class="ngl-header red-gradient" id="questionViewerHeader">Anonimo</div> 
+ <div class="ngl-body"><p class="question-text" id="questionViewerText">Quali sono le proposte principali per strutturare le assemblee?</p></div> 
+ <div class="question-bottom-hole"> 
+ <button class="answer-bubble" onclick="toggleAnswerPocket()"> 
+ <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg> 
+ </button> 
+ </div> 
+ <button class="question-arrow next" onclick="changeQuestion(1)">&#10095;</button> 
+ </div> 
+ </div> 
+ <div class="question-counter" id="questionCounter">Domanda 1 di 1</div> 
+ <div id="answerPocket" class="question-answer-pocket"> 
+ <textarea id="questionAnswerText" class="filter-input" placeholder="Scrivi una risposta alla domanda..."></textarea> 
+ <button class="answer-send-btn" onclick="submitQuestionAnswer()">Rispondi</button> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ 
+ <!-- ================= VISTA: VEDI TUTTO MARKETPLACE (CON RICERCA E PREZZO) ================= --> 
+ <div id="view-all-market" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Tutti gli Annunci</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">← Home</span> 
+ </div> 
+  
+ <!-- Barra dei Filtri Interattivi --> 
+ <div class="search-filter-wrapper"> 
+ <input type="text" id="marketSearch" class="filter-input" placeholder=" Cerca parola chiave o autore..." oninput="filterMarketplace()"> 
+ <input type="number" id="marketPriceMax" class="filter-input" placeholder=" Prezzo massimo (€)..." oninput="filterMarketplace()"> 
+ </div> 
+ 
+ <!-- Griglia Prodotti Filtrabili --> 
+ <div class="market-grid-container" id="gridMarketplace"> 
+  
+ <div class="market-card-scroll market-card-grid" data-title="Le basi della fisica" data-author="Francesco Cerri" data-price="35"> 
+ <div class="market-info-scroll"> 
+ <h4>Le basi della fisica</h4> 
+ <span class="market-author-scroll">Francesco Cerri</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">35€</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Matematica" data-author="Elena Gatti (5°B)" data-price="12"> 
+ <div class="market-info-scroll"> 
+ <h4>Ripetizioni Matematica</h4> 
+ <span class="market-author-scroll">Elena Gatti (5°B)</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">12€/h</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ <div class="market-card-scroll market-card-grid" data-title="Compendio Storia" data-author="Alessandro Neri" data-price="18"> 
+ <div class="market-info-scroll"> 
+ <h4>Compendio Storia</h4> 
+ <span class="market-author-scroll">Alessandro Neri</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">18€</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Libro</span> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ <div class="market-card-scroll market-card-grid" data-title="Ripetizioni Chimica" data-author="Marco Polo (4°A)" data-price="15"> 
+ <div class="market-info-scroll"> 
+ <h4>Ripetizioni Chimica</h4> 
+ <span class="market-author-scroll">Marco Polo (4°A)</span> 
+ <div class="market-footer-scroll"> 
+ <span class="price-tag" style="background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;">15€/h</span> 
+ <span style="font-size:10.5px; color:#64748b; font-weight:600;">Studio</span> 
+ </div> 
+ </div> 
+ </div> 
+ 
+ <div id="marketDynamicList" style="display: contents;"></div> 
+ </div> 
+ </div> 
+ 
+ 
+ 
+ <!-- ================= VISTA: CREA DOMANDA ================= --> 
+ <div id="view-add-question" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Fai una Domanda</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container question-compose-panel"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">La tua domanda sar&agrave; completamente anonima.</p> 
+ <textarea id="newQuestionText" class="filter-input" style="height: 116px; resize: none;" placeholder="Scrivi qui la tua domanda..." oninput="updateQuestionPreview()"></textarea> 
+ <div class="question-preview-title">Scegli il colore della card</div> 
+ <div class="question-color-row"> 
+ <button class="question-color-choice orange-gradient active" type="button" aria-label="Arancione" onclick="chooseQuestionGradient('orange-gradient', this)"></button> 
+ <button class="question-color-choice red-gradient" type="button" aria-label="Rosso" onclick="chooseQuestionGradient('red-gradient', this)"></button> 
+ <button class="question-color-choice purple-gradient" type="button" aria-label="Viola" onclick="chooseQuestionGradient('purple-gradient', this)"></button> 
+ <button class="question-color-choice blue-gradient" type="button" aria-label="Blu" onclick="chooseQuestionGradient('blue-gradient', this)"></button> 
+ <button class="question-color-choice green-gradient" type="button" aria-label="Verde" onclick="chooseQuestionGradient('green-gradient', this)"></button> 
+ </div> 
+ <div class="question-preview-title">Anteprima</div> 
+ <div class="ngl-card question-preview-card"> 
+ <div class="ngl-header orange-gradient" id="questionPreviewHeader">Anonimo</div> 
+ <div class="ngl-body"><p class="question-text" id="questionPreviewText">Scrivi una domanda per vedere l'anteprima...</p></div> 
+ </div> 
+ <button onclick="inviaDomanda()" style="width: 100%; padding: 14px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor:pointer;">Invia in Anonimo</button> 
+ </div> 
+ </div> 
+ 
+ <!-- ================= VISTA: CREA ANNUNCIO ================= --> 
+ <div id="view-add-market" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Nuovo Annuncio</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <input type="text" id="marketTitle" class="filter-input" placeholder="Titolo (es. Ripetizioni Matematica)"> 
+ <input type="text" id="marketAuthor" class="filter-input" placeholder="Il tuo nome (es. Marco 5&deg;A)"> 
+ <input type="number" id="marketPrice" class="filter-input" placeholder="Prezzo (&euro;)"> 
+ <select id="marketType" class="filter-input"> 
+ <option value="Libro">Libro in vendita</option> 
+ <option value="Studio">Ripetizioni/Studio</option> 
+ </select> 
+ <button onclick="inviaAnnuncio()" style="width: 100%; padding: 14px; margin-top: 10px; background: var(--accent-color); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor:pointer;">Pubblica Annuncio</button> 
+ </div> 
+ </div> 
+ 
+ <!-- ================= VISTA 2: OBIETTIVI (PROGRAMMA) ================= --> 
+ <div id="view-obiettivi" class="app-view"> 
+ <div class="view-title-banner">Programma Elettorale e Candidati</div> 
+ <div class="section-container"> 
+  
+ <div class="candidate-card"> 
+ <div class="candidate-header"> 
+ <div class="candidate-avatar-placeholder">FR</div> 
+ <div class="candidate-meta"> 
+ <h3>Federico Rossi</h3> 
+ <span>Candidato Rappresentante d'Istituto</span> 
+ </div> 
+ </div> 
+ <div class="candidate-goal-box"> 
+ <strong>Obiettivo 1: Wi-Fi Stabile.</strong> Potenziare la stabilità della rete Wi-Fi in tutte le aule e digitalizzare la burocrazia per le richieste studentesche. 
+ </div> 
+ </div> 
+ 
+ <div class="candidate-card"> 
+ <div class="candidate-header"> 
+ <div class="candidate-avatar-placeholder">MB</div> 
+ <div class="candidate-meta"> 
+ <h3>Marco Bianchi</h3> 
+ <span>Candidato Rappresentante d'Istituto</span> 
+ </div> 
+ </div> 
+ <div class="candidate-goal-box"> 
+ <strong>Obiettivo 2: Più Convenzioni.</strong> Ampliare la rete dei negozi partner e delle librerie della zona per offrire sconti reali tramite l'app della lista. 
+ </div> 
+ </div> 
+ 
+ <div class="candidate-card"> 
+ <div class="candidate-header"> 
+ <div class="candidate-avatar-placeholder">SG</div> 
+ <div class="candidate-meta"> 
+ <h3>Sofia Galli</h3> 
+ <span>Candidato Rappresentante d'Istituto</span> 
+ </div> 
+ </div> 
+ <div class="candidate-goal-box"> 
+ <strong>Obiettivo 3: Assemblee Interattive.</strong> Introdurre sistemi di dibattito a votazione istantanea digitale e ospitare esperti esterni scelti direttamente da voi. 
+ </div> 
+ </div> 
+ 
+ </div> 
+ </div> 
+ 
+ 
+ <!-- ================= VISTA 3: ARCHIVIO DRIVE CONDIVISO ================= --> 
+ <div id="view-archivio" class="app-view"> 
+ <div class="view-title-banner">Drive Appunti</div> 
+ 
+ <div class="search-filter-wrapper" style="margin-top: 10px;"> 
+ <input type="text" id="archiveSearch" class="filter-input" placeholder=" Cerca materia, argomento o docente..." oninput="filterArchive()"> 
+ </div> 
+ 
+ <div class="section-container" id="archiveContainer"> 
+ <p style="font-size:13px; color:#64748b; margin-bottom:18px;">Scarica i riassunti e i formulari condivisi dagli studenti del nostro istituto</p> 
+  
+ <div id="archiveDynamicList"></div> 
+ </div> 
+ <button class="floating-add-btn" onclick="navigateTo('view-carica-appunti', null, 'CARICA APPUNTI')">+</button> 
+ </div> 
+ 
+ 
+ <!-- ================= VISTA 4: CALENDARIO ASSEMBLEE ================= --> 
+ <div id="view-calendario" class="app-view"> 
+ <div class="view-title-banner">Calendario Assemblee</div> 
+ <section class="section-container main-calendar-wrapper"> 
+  
+ <div class="calendar-widget"> 
+ <div class="calendar-widget-header"> 
+ <button class="cal-arrow" onclick="changeMonth(-1)">&#10094;</button> 
+ <div class="calendar-month-title" id="calendarMonthYear">Giugno 2026</div> 
+ <button class="cal-arrow" onclick="changeMonth(1)">&#10095;</button> 
+ </div> 
+ <div class="calendar-grid" id="calendarGrid"></div> 
+ </div> 
+ 
+ <div class="section-header-inline"> 
+ <h3 class="section-title">Elenco Assemblee del Mese</h3> 
+ </div> 
+ <div class="calendar-list" id="calendarEventList"></div> 
+ </section> 
+ <button class="floating-add-btn" onclick="navigateTo('view-proponi-assemblea', null, 'PROPONI ASSEMBLEA')">+</button> 
+ </div> 
+
+ <!-- ================= VISTA: PROPONI UN ASSEMBLEA ================= --> 
+ <div id="view-proponi-assemblea" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Proponi un'Assemblea</span> 
+ <span class="back-link" onclick="navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Inviaci la tua proposta per una nuova assemblea. Specifica il titolo e cosa vorresti fare.</p> 
+ <input type="text" id="propostaTitolo" class="filter-input" placeholder="Titolo della proposta (es. Torneo di calcetto)"> 
+ <textarea id="propostaDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione (cosa vuoi fare?)"></textarea> 
+ <button onclick="inviaPropostaAssemblea()" class="answer-send-btn" style="margin-top: 10px;">Invia proposta</button> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: INVIA UNA PROPOSTA (VOTAZIONE) ================= --> 
+ <div id="view-invia-proposta" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Invia una Proposta</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Hai un'idea per la scuola? Inviacela! Se approvata, verrà messa ai voti.</p> 
+ <input type="text" id="votazioneTitolo" class="filter-input" placeholder="Titolo della proposta"> 
+ <select id="votazioneCategoria" class="filter-input"> 
+ <option value="Evento">Evento</option> 
+ <option value="Servizio">Servizio</option> 
+ <option value="Miglioria">Miglioria</option> 
+ <option value="Altro">Altro</option> 
+ </select> 
+ <textarea id="votazioneDescrizione" class="filter-input" style="height: 120px; resize: none;" placeholder="Descrizione dettagliata della tua idea..."></textarea> 
+ <button onclick="inviaPropostaVotazione()" class="answer-send-btn" style="margin-top: 10px;">Invia Proposta</button> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: VOTAZIONI ================= --> 
+ <div id="view-votazioni" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Votazioni</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container"> 
+ <div class="voting-proposals-container" id="proposteAttiveList"> 
+ <!-- Caricate dinamicamente --> 
+ </div> 
+  
+ <div class="chart-wrapper" style="margin-top: 30px;"> 
+ <canvas id="votingChart"></canvas> 
+ </div> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: ARCHIVIO STORICO VOTAZIONI ================= --> 
+ <div id="view-archivio-storico-votazioni" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Archivio Votazioni</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Indietro</span> 
+ </div> 
+ <div class="section-container" id="archivioVotazioniList"> 
+ <!-- Caricato dinamicamente --> 
+ </div> 
+ </div> 
+
+ <!-- ================= VISTA: CARICA APPUNTI ================= --> 
+ <!-- ================= VISTA: ISCRIZIONE TORNEO ================= --> 
+ <div id="view-iscrizione-torneo" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span id="titoloTorneoIscrizione">Iscrizione Torneo</span> 
+ <span class="back-link" onclick="navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <input type="text" id="iscrizioneNome" class="filter-input" placeholder="Il tuo Nome"> 
+ <input type="text" id="iscrizioneCognome" class="filter-input" placeholder="Il tuo Cognome"> 
+ <input type="text" id="iscrizioneClasse" class="filter-input" placeholder="La tua Classe"> 
+ <input type="email" id="iscrizioneEmail" class="filter-input" placeholder="La tua Email"> 
+  
+ <div id="ruoloTorneoSezione" style="margin-top: 10px;"> 
+ <p style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px;">Ti stai iscrivendo come:</p> 
+ <div style="display: flex; gap: 20px;"> 
+ <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;"> 
+ <input type="radio" name="ruoloTorneo" value="spettatore" checked onclick="toggleSezioneCapitano(false)"> Spettatore 
+ </label> 
+ <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569;"> 
+ <input type="radio" name="ruoloTorneo" value="capitano" onclick="toggleSezioneCapitano(true)"> Capitano 
+ </label> 
+ </div> 
+ </div> 
+  
+ <!-- SEZIONE AGGIUNTIVA PER IL CAPITANO --> 
+ <div id="sezioneCapitano" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #e2e8f0;"> 
+ <input type="text" id="squadraNome" class="filter-input" placeholder="Nome della Squadra"> 
+ <input type="number" id="squadraMembriCount" class="filter-input" placeholder="Numero membri (escluso te)" oninput="generaCampiMembri(this.value)"> 
+  
+ <div id="containerMembriSquadra" style="display: flex; flex-direction: column; gap: 15px;"> 
+ <!-- I campi dei membri verranno generati qui --> 
+ </div> 
+ </div> 
+  
+ <button onclick="inviaIscrizioneTorneo()" class="answer-send-btn" style="margin-top: 20px;">Invia iscrizione</button> 
+ </div> 
+ </div> 
+
+ 
+ <div id="view-carica-appunti" class="app-view"> 
+ <div class="view-title-banner"> 
+ <span>Carica i tuoi Appunti</span> 
+ <span class="back-link" onclick="navigateTo('view-archivio', null, 'DRIVE APPUNTI')">&#8592; Annulla</span> 
+ </div> 
+ <div class="section-container" style="display: flex; flex-direction: column; gap: 12px;"> 
+ <p style="font-size:13px; color:#64748b; line-height:1.4;">Condividi i tuoi appunti con gli altri studenti. Compila i campi e seleziona il file.</p> 
+ <input type="text" id="appuntiMateria" class="filter-input" placeholder="Materia (es. Matematica)"> 
+ <input type="text" id="appuntiArgomento" class="filter-input" placeholder="Argomento (es. Derivate)"> 
+ <input type="text" id="appuntiDocente" class="filter-input" placeholder="Docente"> 
+ <textarea id="appuntiNote" class="filter-input" style="height: 80px; resize: none;" placeholder="Eventuali note..."></textarea> 
+  
+ <div style="background: white; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('appuntiFile').click()"> 
+ <span style="font-size: 13px; color: #64748b;" id="fileNameDisplay">Seleziona un file (PDF, Immagine...)</span> 
+ <input type="file" id="appuntiFile" style="display: none;" onchange="updateFileNameDisplay(this)"> 
+ </div> 
+
+ <div id="uploadProgressContainer" class="progress-container"> 
+ <div id="uploadProgressBar" class="progress-bar"></div> 
+ <p id="uploadProgressText" class="progress-text">Caricamento: 0%</p> 
+ </div> 
+  
+ <button id="btnInviaAppunti" onclick="inviaAppunti()" class="answer-send-btn" style="margin-top: 10px;">Carica appunti</button> 
+ </div> 
+ </div> 
+ 
+ 
+ <!-- ================= VISTA 5: IMPOSTAZIONI CAMBIO COLORE ================= --> 
+ <div id="view-settings" class="app-view"> 
+ <div class="view-title-banner">Cambia il Colore dell'App</div> 
+ <section class="section-container"> 
+ <p style="font-size: 13.5px; color: #64748b; margin-bottom: 20px; line-height: 1.4;"> 
+ Seleziona un tema. L'intera interfaccia, comprese le barre e i gradienti, cambierà istantaneamente configurazione cromatica. 
+ </p> 
+ <div class="color-picker-grid"> 
+ <div class="color-option-card" onclick="setAppTheme('#0f2d59', '#17427a', '#17427a', '#93c5fd')"> 
+ <div class="color-circle-preview" style="background: linear-gradient(135deg, #0f2d59, #17427a);"></div> 
+ <span>Blu Classico</span> 
+ </div> 
+ <div class="color-option-card" onclick="setAppTheme('#064e3b', '#059669', '#059669', '#a7f3d0')"> 
+ <div class="color-circle-preview" style="background: linear-gradient(135deg, #064e3b, #059669);"></div> 
+ <span>Verde Smeraldo</span> 
+ </div> 
+ <div class="color-option-card" onclick="setAppTheme('#7f1d1d', '#dc2626', '#dc2626', '#fca5a5')"> 
+ <div class="color-circle-preview" style="background: linear-gradient(135deg, #7f1d1d, #dc2626);"></div> 
+ <span>Rosso Fuoco</span> 
+ </div> 
+ <div class="color-option-card" onclick="setAppTheme('#4c1d95', '#7c3aed', '#7c3aed', '#ddd6fe')"> 
+ <div class="color-circle-preview" style="background: linear-gradient(135deg, #4c1d95, #7c3aed);"></div> 
+ <span>Viola Regale</span> 
+ </div> 
+ </div> 
+ </section> 
+ </div> 
+ 
+ <!-- MODALE DOWNLOAD CON PROGRESSO --> 
+ <div id="downloadModal" class="download-modal"> 
+ <div class="download-modal-content"> 
+ <h3 id="downloadFileName">File.pdf</h3> 
+ <p>Preparazione del download...</p> 
+ <div class="progress-container" style="display: block;"> 
+ <div id="downloadProgressBar" class="progress-bar"></div> 
+ </div> 
+ <p id="downloadProgressText" class="progress-text" style="margin-top: 8px;">0%</p> 
+ </div> 
+ </div> 
+ 
+ 
+ <!-- NAVBAR FLUTTUANTE IN BASSO --> 
+ <nav class="bottom-nav"> 
+ <button class="nav-item active" onclick="navigateTo('view-home', this, 'BENVENUTI SULL\'APP<br>DELLA LISTA 2')"> 
+ <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> 
+ </button> 
+ <button class="nav-item" onclick="navigateTo('view-obiettivi', this, 'IL NOSTRO PROGRAMMA')"> 
+ <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg> 
+ </button> 
+ <button class="nav-item center-item" onclick="navigateTo('view-archivio', this, 'DRIVE APPUNTI')"> 
+ <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> 
+ </button> 
+ <button class="nav-item" onclick="navigateTo('view-calendario', this, 'AGENDA ASSEMBLEE')"> 
+ <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg> 
+ </button> 
+ <button class="nav-item" onclick="navigateTo('view-settings', this, 'IMPOSTAZIONI TEMA')"> 
+ <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> 
+ </button> 
+ </nav> 
+ 
+ </div> 
+ 
+ 
+ <!-- SCRIPT LOGICI DI FUNZIONAMENTO --> 
+ <script> 
+ // 0. LOGICA TEMPI RELATIVI PER I POST 
+ function updateRelativeTimes() { 
+ const now = new Date(); 
+ document.querySelectorAll('.post-date[data-timestamp]').forEach(el => { 
+ const timestamp = new Date(el.dataset.timestamp); 
+ const diffMs = now - timestamp; 
+ const diffMin = Math.floor(diffMs / 60000); 
+ const diffOre = Math.floor(diffMs / 3600000); 
+ const diffGiorni = Math.floor(diffMs / 86400000); 
+  
+ if (diffMin < 60) { 
+ // Sotto i 60 minuti: mostra l'orario originale HH:mm 
+ const hh = String(timestamp.getHours()).padStart(2, '0'); 
+ const mm = String(timestamp.getMinutes()).padStart(2, '0'); 
+ el.textContent = `${hh}:${mm}`; 
+ } else if (diffOre < 24) { 
+ el.textContent = `${diffOre} ${diffOre === 1 ? 'ora' : 'ore'} fa`; 
+ } else if (diffGiorni === 1) { 
+ el.textContent = "ieri"; 
+ } else { 
+ el.textContent = `${diffGiorni} giorni fa`; 
+ } 
+ }); 
+ } 
+ updateRelativeTimes(); 
+ setInterval(updateRelativeTimes, 60000); // Aggiorna ogni minuto 
+ 
+ // 1. AUTO SCROLL NOTIZIE 
+ let currentSlide = 0; 
+ const slides = document.querySelectorAll('.news-slide'); 
+ function showSlide(index) { 
+ if(slides.length === 0) return; 
+ slides[currentSlide].classList.remove('active'); 
+ currentSlide = (index + slides.length) % slides.length; 
+ slides[currentSlide].classList.add('active'); 
+ } 
+ function moveSlide(step) { showSlide(currentSlide + step); } 
+ setInterval(() => { moveSlide(1); }, 10000); 
+ 
+ // 2. GESTIONE LIKE REALE INTERATTIVA 
+ function toggleLike(button, baseCount) { 
+ button.classList.toggle('liked'); 
+ const countSpan = button.querySelector('.like-count'); 
+ countSpan.textContent = button.classList.contains('liked') ? baseCount + 1 : baseCount; 
+ } 
+ 
+ // 3. NAVIGAZIONE SPA TRA LE SCHERMATE 
+ function navigateTo(viewId, navButton, titleText) { 
+ document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active')); 
+ document.getElementById(viewId).classList.add('active'); 
+  
+ // Gestisci l'attivazione grafica delle icone navbar solo se non è una sotto-vista (es. vedi tutto) 
+ if(navButton && navButton.classList.contains('nav-item')) { 
+ document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); 
+ navButton.classList.add('active'); 
+ } 
+  
+ document.getElementById('headerTitle').innerHTML = titleText; 
+ 
+ if(viewId === 'view-calendario') { 
+ renderCalendar(); 
+ } 
+ if(viewId === 'view-archivio') { 
+ if(typeof window.caricaArchivioAppunti === 'function') window.caricaArchivioAppunti(); 
+ } 
+ } 
+ 
+ // 4. FILTRO LIVE DEL MARKETPLACE (TESTO + PREZZO) 
+ function filterMarketplace() { 
+ if(typeof window.filterMarketplace === 'function') { 
+ return window.filterMarketplace(); 
+ } 
+ } 
+ 
+ // 5. CAMBIO COLORE REALE CON INIEZIONE NELLE VARIABILI ROOT 
+ function setAppTheme(startColor, endColor, accentColor, lightAccent) { 
+ document.documentElement.style.setProperty('--primary-grad-start', startColor); 
+ document.documentElement.style.setProperty('--primary-grad-end', endColor); 
+ document.documentElement.style.setProperty('--accent-color', accentColor); 
+ document.documentElement.style.setProperty('--accent-light', lightAccent); 
+ } 
+ 
+ // 6. MOTORE CALENDARIO DINAMICO REALE SULLE ASSEMBLEE 
+ let currentDate = new Date(2026, 5, 1); // Giugno 2026 
+  
+ const eventsDatabase = { 
+ "2026-06-05": [{ title: "Assemblea Straordinaria Digitale", time: "Ore 10:00", loc: "Online via App" }], 
+ "2026-06-12": [{ title: "Assemblea d'Istituto Generale", time: "Ore 09:00", loc: "Aula Magna" }], 
+ "2026-06-19": [{ title: "Assemblea Coordinamento Comitati", time: "Ore 14:30", loc: "Aula 12" }], 
+ "2026-06-26": [{ title: "Assemblea Plenaria di Fine Anno", time: "Ore 11:30", loc: "Cortile Esterno" }] 
+ }; 
+ 
+ const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]; 
+ const shortMonths = ["GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUGL", "AGO", "SET", "OTT", "NOV", "DIC"]; 
+ 
+ function changeMonth(direction) { 
+ currentDate.setMonth(currentDate.getMonth() + direction); 
+ renderCalendar(); 
+ } 
+ 
+ function renderCalendar() { 
+ const year = currentDate.getFullYear(); 
+ const month = currentDate.getMonth(); 
+ document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`; 
+  
+ const grid = document.getElementById('calendarGrid'); 
+ grid.innerHTML = ''; 
+  
+ const weekdays = ['L', 'M', 'M', 'G', 'V', 'S', 'D']; 
+ weekdays.forEach(day => { 
+ const label = document.createElement('div'); 
+ label.className = 'weekday-label'; 
+ label.textContent = day; 
+ grid.appendChild(label); 
+ }); 
+  
+ const firstDayIndex = new Date(year, month, 1).getDay(); 
+ const blanks = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
+  
+ for (let i = 0; i < blanks; i++) { 
+ const emptyCell = document.createElement('div'); 
+ emptyCell.className = 'calendar-day empty'; 
+ grid.appendChild(emptyCell); 
+ } 
+  
+ const daysInMonth = new Date(year, month + 1, 0).getDate(); 
+  
+ for (let day = 1; day <= daysInMonth; day++) { 
+ const dayCell = document.createElement('div'); 
+ dayCell.className = 'calendar-day'; 
+ dayCell.textContent = day; 
+  
+ const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; 
+  
+ if (eventsDatabase[dateString]) { 
+ dayCell.classList.add('has-event'); 
+ } 
+  
+ dayCell.onclick = () => { 
+ document.querySelectorAll('.calendar-day').forEach(c => c.classList.remove('selected')); 
+ dayCell.classList.add('selected'); 
+ showEventsForDate(dateString, day, month); 
+ }; 
+  
+ grid.appendChild(dayCell); 
+ } 
+ showMonthDefaultEvents(year, month); 
+ } 
+ 
+ function showEventsForDate(dateString, day, month) { 
+ const container = document.getElementById('calendarEventList'); 
+ container.innerHTML = ''; 
+ const events = eventsDatabase[dateString]; 
+ if (events && events.length > 0) { 
+ events.forEach(ev => { 
+ container.innerHTML += ` 
+ <div class="calendar-row"> 
+ <div class="date-badge"> 
+ <span class="badge-day">${day}</span> 
+ <span class="badge-month">${shortMonths[month]}</span> 
+ </div> 
+ <div class="event-details"> 
+ <h4>${ev.title}</h4> 
+ <p>${ev.time} - ${ev.loc}</p> 
+ </div> 
+ </div> 
+ `; 
+ }); 
+ } else { 
+ container.innerHTML = `<p style="font-size:13px; color:#64748b; text-align:center; padding:10px;">Nessuna assemblea programmata per questa data.</p>`; 
+ } 
+ } 
+ 
+ function showMonthDefaultEvents(year, month) { 
+ const container = document.getElementById('calendarEventList'); 
+ container.innerHTML = ''; 
+ let found = false; 
+ Object.keys(eventsDatabase).forEach(dateStr => { 
+ const [evYear, evMonth, evDay] = dateStr.split('-').map(Number); 
+ if (evYear === year && evMonth === (month + 1)) { 
+ found = true; 
+ eventsDatabase[dateStr].forEach(ev => { 
+ container.innerHTML += ` 
+ <div class="calendar-row" style="cursor:pointer;" onclick="highlightCalendarDay(${evDay})"> 
+ <div class="date-badge"> 
+ <span class="badge-day">${evDay}</span> 
+ <span class="badge-month">${shortMonths[month]}</span> 
+ </div> 
+ <div class="event-details"> 
+ <h4>${ev.title}</h4> 
+ <p>${ev.time} - ${ev.loc}</p> 
+ </div> 
+ </div> 
+ `; 
+ }); 
+ } 
+ }); 
+ if(!found) { 
+ container.innerHTML = `<p style="font-size:13px; color:#64748b; text-align:center; padding:10px;">Nessun evento pianificato per questo mese.</p>`; 
+ } 
+ } 
+ 
+ function highlightCalendarDay(day) { 
+ document.querySelectorAll('.calendar-day').forEach(c => { 
+ if(c.textContent == day && !c.classList.contains('empty')) { 
+ c.classList.add('selected'); 
+ c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
+ } else { 
+ c.classList.remove('selected'); 
+ } 
+ }); 
+ } 
+ </script> 
+ 
+ 
+ <script> 
+ (function() { 
+ const SUPABASE_URL = "https://kijgeyfhvvrmriwpvebm.supabase.co"; 
+ const SUPABASE_KEY = "sb_publishable_5WJ5tNUj_NpdfbdQAIiVWQ_KPXYc_VM"; 
+ const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null; 
+ 
+ // 1. GESTIONE DEVICE_ID 
+ function getDeviceId() { 
+ let id = localStorage.getItem('lista2_device_id'); 
+ if (!id) { 
+ id = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); 
+ localStorage.setItem('lista2_device_id', id); 
+ } 
+ return id; 
+ } 
+ const deviceId = getDeviceId(); 
+ 
+ const gradientiDomande = ['orange-gradient', 'red-gradient', 'purple-gradient', 'blue-gradient', 'green-gradient']; 
+ let likedPosts = new Set(); 
+ let selectedQuestionGradient = 'orange-gradient'; 
+ let questionViewerIndex = 0; 
+ const defaultQuestions = [ 
+ { testo: 'Quali sono le proposte principali per strutturare le assemblee?', gradiente: 'red-gradient' }, 
+ { testo: 'Riusciremo ad avere sconti reali anche per i libri scolastici?', gradiente: 'purple-gradient' }, 
+ { testo: "Verranno organizzati tornei sportivi d'istituto?", gradiente: 'blue-gradient' }, 
+ { testo: 'Come possiamo proporre nuovi partner per le convenzioni?', gradiente: 'orange-gradient' } 
+ ]; 
+ let allQuestionsData = [...defaultQuestions]; 
+ const navigateOriginale = window.navigateTo; 
+ if(typeof navigateOriginale === 'function') { 
+ window.navigateTo = function(viewId, navButton, titleText) { 
+ navigateOriginale(viewId, navButton, titleText); 
+ if(viewId === 'view-all-questions') renderQuestionViewer(); 
+ if(viewId === 'view-add-question') updateQuestionPreview(); 
+ if(viewId === 'view-votazioni') window.caricaVotazioniEGrafico(); 
+ if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni(); 
+ }; 
+ } 
+ 
+ function updateLikeCount(postId, count) { 
+ document.querySelectorAll('.like-btn[data-post-id="' + postId + '"]').forEach(button => { 
+ const countSpan = button.querySelector('.like-count'); 
+ if(countSpan) countSpan.textContent = count; 
+ if(likedPosts.has(Number(postId))) button.classList.add('liked'); 
+ else button.classList.remove('liked'); 
+ }); 
+ } 
+ 
+ async function caricaLikePost() { 
+ if(!db) return; 
+ const postButtons = document.querySelectorAll('.like-btn[data-post-id]'); 
+  
+ // 1. Ottieni tutti i like per contare e verificare l'utente attuale 
+ const { data: allLikes, error: errLikes } = await db.from('post_likes').select('post_id, device_id'); 
+ if(errLikes) return console.error("Errore caricamento like:", errLikes); 
+  
+ // 2. Filtra i like dell'utente attuale 
+ likedPosts = new Set(allLikes.filter(l => l.device_id === deviceId).map(l => Number(l.post_id))); 
+  
+ // 3. Conta i like per ogni post e aggiorna il DOM 
+ postButtons.forEach(button => { 
+ const postId = Number(button.dataset.postId); 
+ const defaultLikes = Number(button.dataset.defaultLikes || 0); 
+ const dbLikesCount = allLikes.filter(l => Number(l.post_id) === postId).length; 
+ updateLikeCount(postId, dbLikesCount + defaultLikes); 
+ }); 
+ } 
+ 
+ window.toggleLike = async function(button) { 
+ const postId = Number(button.dataset.postId); 
+ if(!postId) return; 
+  
+ const wasLiked = likedPosts.has(postId); 
+ const delta = wasLiked ? -1 : 1; 
+  
+ // Aggiornamento DOM Istantaneo 
+ const countSpan = button.querySelector('.like-count'); 
+ const countAttuale = parseInt(countSpan.textContent, 10) || 0; 
+ if(wasLiked) likedPosts.delete(postId); 
+ else likedPosts.add(postId); 
+ updateLikeCount(postId, Math.max(0, countAttuale + delta)); 
+  
+ if(!db) return; 
+  
+ if(wasLiked) { 
+ // Rimuovi il like 
+ const { error } = await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId); 
+ if(error) { 
+ likedPosts.add(postId); 
+ updateLikeCount(postId, countAttuale); 
+ } 
+ } else { 
+ // Aggiungi il like 
+ const { error } = await db.from('post_likes').insert({ post_id: postId, device_id: deviceId }); 
+ if(error) { 
+ // Se fallisce (es. già presente), proviamo a rimuoverlo (toggle) 
+ await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId); 
+ likedPosts.delete(postId); 
+ updateLikeCount(postId, countAttuale); 
+ } 
+ } 
+ }; 
+ 
+ function creaCardDomanda(domanda) { 
+ const card = document.createElement('div'); 
+ card.className = 'ngl-card'; 
+ const header = document.createElement('div'); 
+ header.className = 'ngl-header ' + (gradientiDomande.includes(domanda.gradiente) ? domanda.gradiente : 'orange-gradient'); 
+ header.textContent = 'Anonimo'; 
+ const body = document.createElement('div'); 
+ body.className = 'ngl-body'; 
+ const text = document.createElement('p'); 
+ text.className = 'question-text'; 
+ text.textContent = domanda.testo || ''; 
+ body.appendChild(text); 
+ card.appendChild(header); 
+ card.appendChild(body); 
+ return card; 
+ } 
+ 
+ window.chooseQuestionGradient = function(gradiente, button) { 
+ selectedQuestionGradient = gradientiDomande.includes(gradiente) ? gradiente : 'orange-gradient'; 
+ document.querySelectorAll('.question-color-choice').forEach(choice => choice.classList.remove('active')); 
+ if(button) button.classList.add('active'); 
+ updateQuestionPreview(); 
+ }; 
+ 
+ window.updateQuestionPreview = function() { 
+ const input = document.getElementById('newQuestionText'); 
+ const previewHeader = document.getElementById('questionPreviewHeader'); 
+ const previewText = document.getElementById('questionPreviewText'); 
+ if(previewHeader) { 
+ previewHeader.className = 'ngl-header ' + selectedQuestionGradient; 
+ previewHeader.textContent = 'Anonimo'; 
+ } 
+ if(previewText) previewText.textContent = input && input.value.trim() ? input.value.trim() : "Scrivi una domanda per vedere l'anteprima..."; 
+ }; 
+ 
+ function renderQuestionViewer() { 
+ const domanda = allQuestionsData[questionViewerIndex] || allQuestionsData[0]; 
+ const card = document.getElementById('questionViewerCard'); 
+ const header = document.getElementById('questionViewerHeader'); 
+ const text = document.getElementById('questionViewerText'); 
+ const counter = document.getElementById('questionCounter'); 
+ if(!card || !header || !text || !counter) return; 
+ if(!domanda) { 
+ header.className = 'ngl-header orange-gradient'; 
+ text.textContent = 'Non ci sono ancora domande.'; 
+ counter.textContent = 'Domanda 0 di 0'; 
+ return; 
+ } 
+ const gradiente = gradientiDomande.includes(domanda.gradiente) ? domanda.gradiente : 'orange-gradient'; 
+ header.className = 'ngl-header ' + gradiente; 
+ text.textContent = domanda.testo || ''; 
+ counter.textContent = 'Domanda ' + (questionViewerIndex + 1) + ' di ' + allQuestionsData.length; 
+ } 
+ 
+ window.changeQuestion = function(step) { 
+ if(!allQuestionsData.length) return; 
+ questionViewerIndex = (questionViewerIndex + step + allQuestionsData.length) % allQuestionsData.length; 
+ renderQuestionViewer(); 
+ const pocket = document.getElementById('answerPocket'); 
+ if(pocket) pocket.classList.remove('active'); 
+ }; 
+ 
+ window.toggleAnswerPocket = function() { 
+ const pocket = document.getElementById('answerPocket'); 
+ if(pocket) pocket.classList.toggle('active'); 
+ }; 
+ 
+ window.submitQuestionAnswer = function() { 
+ const answer = document.getElementById('questionAnswerText'); 
+ if(!answer || !answer.value.trim()) return alert('Scrivi una risposta prima di inviarla.'); 
+ answer.value = ''; 
+ alert('Risposta salvata come bozza.'); 
+ }; 
+ 
+ window.caricaDomande = async function() { 
+ if(!db) { 
+ allQuestionsData = [...defaultQuestions]; 
+ renderQuestionViewer(); 
+ return; 
+ } 
+ const { data, error } = await db.from('domande_anonime').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+ const dynamicHome = document.getElementById('domandeDynamicHome'); 
+ if(dynamicHome) dynamicHome.innerHTML = ''; 
+ (data || []).forEach(domanda => { 
+ if(dynamicHome) dynamicHome.appendChild(creaCardDomanda(domanda)); 
+ }); 
+ allQuestionsData = [...defaultQuestions, ...(data || [])]; 
+ if(questionViewerIndex >= allQuestionsData.length) questionViewerIndex = 0; 
+ renderQuestionViewer(); 
+ }; 
+ 
+ window.inviaDomanda = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const input = document.getElementById('newQuestionText'); 
+ const testo = input.value.trim(); 
+ if(!testo) return alert('Inserisci una domanda!'); 
+ const gradiente = selectedQuestionGradient; 
+ const { error } = await db.from('domande_anonime').insert({ testo, gradiente }); 
+ if(error) return alert("Errore nell'invio della domanda."); 
+ input.value = ''; 
+ selectedQuestionGradient = 'orange-gradient'; 
+ document.querySelectorAll('.question-color-choice').forEach((choice, index) => choice.classList.toggle('active', index === 0)); 
+ updateQuestionPreview(); 
+ await window.caricaDomande(); 
+ navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2'); 
+ }; 
+ 
+ function formatPrezzo(prezzo, tipo) { 
+ const numero = Number(prezzo || 0); 
+ const testoPrezzo = Number.isInteger(numero) ? String(numero) : numero.toFixed(2).replace('.', ','); 
+ return tipo === 'Studio' ? testoPrezzo + '€/h' : testoPrezzo + '€'; 
+ } 
+ 
+ function creaCardMarketplace(item, grid) { 
+ const card = document.createElement('div'); 
+ card.className = grid ? 'market-card-scroll market-card-grid' : 'market-card-scroll'; 
+ if(grid) { 
+ card.setAttribute('data-title', String(item.titolo || '').toLowerCase()); 
+ card.setAttribute('data-author', String(item.autore || '').toLowerCase()); 
+ card.setAttribute('data-price', String(item.prezzo || 0)); 
+ } 
+ const info = document.createElement('div'); 
+ info.className = 'market-info-scroll'; 
+ const title = document.createElement('h4'); 
+ title.textContent = item.titolo || ''; 
+ const author = document.createElement('span'); 
+ author.className = 'market-author-scroll'; 
+ author.textContent = item.autore || ''; 
+ const footer = document.createElement('div'); 
+ footer.className = 'market-footer-scroll'; 
+ const price = document.createElement('span'); 
+ price.className = 'price-tag'; 
+ price.setAttribute('style', 'background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;'); 
+ price.textContent = formatPrezzo(item.prezzo, item.tipo); 
+ const type = document.createElement('span'); 
+ type.setAttribute('style', 'font-size:10.5px; color:#64748b; font-weight:600;'); 
+ type.textContent = item.tipo || ''; 
+ footer.appendChild(price); 
+ footer.appendChild(type); 
+ info.appendChild(title); 
+ info.appendChild(author); 
+ info.appendChild(footer); 
+ card.appendChild(info); 
+ return card; 
+ } 
+ 
+ window.caricaMarketplace = async function() { 
+ if(!db) return; 
+ const { data, error } = await db.from('marketplace').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+ const dynamicHome = document.getElementById('marketDynamicHome'); 
+ const dynamicList = document.getElementById('marketDynamicList'); 
+ if(dynamicHome) dynamicHome.innerHTML = ''; 
+ if(dynamicList) dynamicList.innerHTML = ''; 
+ (data || []).forEach(item => { 
+ if(dynamicHome) dynamicHome.appendChild(creaCardMarketplace(item, false)); 
+ if(dynamicList) dynamicList.appendChild(creaCardMarketplace(item, true)); 
+ }); 
+ filterMarketplace(); 
+ }; 
+ 
+ window.inviaAnnuncio = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const titolo = document.getElementById('marketTitle').value.trim(); 
+ const autore = document.getElementById('marketAuthor').value.trim(); 
+ const prezzo = parseFloat(document.getElementById('marketPrice').value); 
+ const tipo = document.getElementById('marketType').value; 
+ if(!titolo || !autore || Number.isNaN(prezzo)) return alert('Compila tutti i campi!'); 
+ const { error } = await db.from('marketplace').insert({ titolo, autore, prezzo, tipo }); 
+ if(error) return alert("Errore nella pubblicazione dell'annuncio."); 
+ document.getElementById('marketTitle').value = ''; 
+ document.getElementById('marketAuthor').value = ''; 
+ document.getElementById('marketPrice').value = ''; 
+ await window.caricaMarketplace(); 
+ navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2'); 
+ }; 
+ 
+ window.inviaPropostaAssemblea = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const titolo = document.getElementById('propostaTitolo').value.trim(); 
+ const descrizione = document.getElementById('propostaDescrizione').value.trim(); 
+ if(!titolo || !descrizione) return alert('Compila tutti i campi!'); 
+ const { error } = await db.from('proposte_assemblee').insert({ titolo, descrizione }); 
+ if(error) return alert("Errore nell'invio della proposta."); 
+ alert('Proposta inviata con successo!'); 
+ document.getElementById('propostaTitolo').value = ''; 
+ document.getElementById('propostaDescrizione').value = ''; 
+ navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE'); 
+ }; 
+ 
+ window.updateFileNameDisplay = function(input) { 
+ const display = document.getElementById('fileNameDisplay'); 
+ if(input.files && input.files[0]) { 
+ display.textContent = "File selezionato: " + input.files[0].name; 
+ display.style.color = "var(--accent-color)"; 
+ display.style.fontWeight = "bold"; 
+ } else { 
+ display.textContent = "Seleziona un file (PDF, Immagine...)"; 
+ display.style.color = "#64748b"; 
+ display.style.fontWeight = "normal"; 
+ } 
+ }; 
+ 
+ window.downloadFile = async function(fileDati, nomeFile) { 
+ if(!db) return; 
+  
+ const modal = document.getElementById('downloadModal'); 
+ const fileNameText = document.getElementById('downloadFileName'); 
+ const progressBar = document.getElementById('downloadProgressBar'); 
+ const progressText = document.getElementById('downloadProgressText'); 
+  
+ fileNameText.textContent = nomeFile; 
+ modal.style.display = 'flex'; 
+ progressBar.style.width = '0%'; 
+ progressText.textContent = '0%'; 
+  
+ try { 
+ // Simulazione caricamento con progresso per il download 
+ for (let p = 0; p <= 100; p += 5) { 
+ progressBar.style.width = p + '%'; 
+ progressText.textContent = p + "%"; 
+ await new Promise(r => setTimeout(r, 100)); 
+ } 
+  
+ // Download effettivo tramite URL pubblico dello Storage 
+ if(fileDati && !fileDati.startsWith('static/')) { 
+ const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati); 
+ const publicUrl = data.publicUrl; 
+ 
+ // FIX PER SMARTPHONE: Creazione link senza target="_blank" per evitare i blocchi e fallback per iOS
+ const link = document.createElement('a'); 
+ link.href = publicUrl; 
+ link.download = nomeFile; 
+ document.body.appendChild(link); 
+ link.click(); 
+ document.body.removeChild(link); 
+ 
+ // Fallback aggiuntivo per forzare l'apertura se il download silently fails su iOS
+ setTimeout(() => { window.location.href = publicUrl; }, 150);
+ } else { 
+ alert("Download del file statico: " + nomeFile); 
+ } 
+  
+ setTimeout(() => { 
+ modal.style.display = 'none'; 
+ }, 500); 
+  
+ } catch (err) { 
+ modal.style.display = 'none'; 
+ alert("Errore durante il download."); 
+ } 
+ }; 
+ 
+ window.inviaAppunti = async function() { 
+ if(!db) return alert('Connessione a Supabase non disponibile.'); 
+ const materia = document.getElementById('appuntiMateria').value.trim(); 
+ const argomento = document.getElementById('appuntiArgomento').value.trim(); 
+ const docente = document.getElementById('appuntiDocente').value.trim(); 
+ const note = document.getElementById('appuntiNote').value.trim(); 
+ const fileInput = document.getElementById('appuntiFile'); 
+  
+ if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!'); 
+ if(!fileInput.files || !fileInput.files[0]) return alert('Seleziona un file da caricare!'); 
+  
+ const file = fileInput.files[0]; 
+ const nome_file = file.name; 
+  
+ // UI Progress 
+ const progressContainer = document.getElementById('uploadProgressContainer'); 
+ const progressBar = document.getElementById('uploadProgressBar'); 
+ const progressText = document.getElementById('uploadProgressText'); 
+ const btnInvia = document.getElementById('btnInviaAppunti'); 
+  
+ progressContainer.style.display = 'block'; 
+ btnInvia.disabled = true; 
+ btnInvia.style.opacity = '0.5'; 
+  
+ // Step 1: Upload del file nello Storage 
+ const nomeUnico = Date.now() + "_" + nome_file; 
+ progressBar.style.width = '30%'; 
+ progressText.textContent = "Caricamento nello Storage..."; 
+  
+ const { data: storageData, error: storageError } = await db 
+ .storage 
+ .from('archivio_pdf') 
+ .upload(nomeUnico, file); 
+  
+ if (storageError) { 
+ progressContainer.style.display = 'none'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+ return alert("Errore nello Storage: " + storageError.message); 
+ } 
+  
+ const file_dati = storageData.path; 
+  
+ progressBar.style.width = '70%'; 
+ progressText.textContent = "Salvataggio nel Database..."; 
+  
+ const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file }); 
+ if(error) return alert("Errore nel caricamento degli appunti."); 
+  
+ alert('Appunti caricati con successo!'); 
+ // Reset UI 
+ progressContainer.style.display = 'none'; 
+ progressBar.style.width = '0%'; 
+ btnInvia.disabled = false; 
+ btnInvia.style.opacity = '1'; 
+  
+ // Reset campi 
+ document.getElementById('appuntiMateria').value = ''; 
+ document.getElementById('appuntiArgomento').value = ''; 
+ document.getElementById('appuntiDocente').value = ''; 
+ document.getElementById('appuntiNote').value = ''; 
+ fileInput.value = ''; 
+ document.getElementById('fileNameDisplay').textContent = "Seleziona un file (PDF, Immagine...)"; 
+  
+ await window.caricaArchivioAppunti(); 
+ navigateTo('view-archivio', null, 'DRIVE APPUNTI'); 
+ }; 
+ 
+ function escapeHTML(str) { 
+ if(!str) return ""; 
+ return str.replace(/[&<>"']/g, function(m) { 
+ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; 
+ }); 
+ } 
+ 
+ function creaCardAppunto(appunto) { 
+ const card = document.createElement('div'); 
+ card.className = 'note-card archive-item-dynamic'; 
+ card.style.cursor = 'pointer'; 
+ card.setAttribute('data-materia', (appunto.materia || '').toLowerCase()); 
+ card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase()); 
+ card.setAttribute('data-docente', (appunto.docente || '').toLowerCase()); 
+  
+ card.innerHTML = ` 
+ <div class="note-icon"> 
+ <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> 
+ </div> 
+ <div class="note-info"> 
+ <h4>${escapeHTML(appunto.materia)}</h4> 
+ <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p> 
+ ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''} 
+ <div class="note-meta">Caricato da uno studente</div> 
+ </div> 
+ <div class="note-download-icon" style="flex-shrink:0; margin-left:8px;"> 
+ <svg viewBox="0 0 24 24" width="20" height="20" fill="#94a3b8"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 
+ </div> 
+ `; 
+  
+ card.onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file); 
+ return card; 
+ } 
+ 
+ window.caricaArchivioAppunti = async function() { 
+ if(!db) return; 
+ const { data, error } = await db.from('archivio_appunti').select('*').order('creato_il', { ascending: false }); 
+ if(error) return; 
+ const dynamicList = document.getElementById('archiveDynamicList'); 
+ if(dynamicList) { 
+ dynamicList.innerHTML = ''; 
+ (data || []).forEach(appunto => { 
+ dynamicList.appendChild(creaCardAppunto(appunto)); 
+ }); 
+ } 
+ if(typeof window.filterArchive === 'function') window.filterArchive(); 
+ }; 
+ 
+ window.filterArchive = function() { 
+ const query = (document.getElementById('archiveSearch')?.value || '').toLowerCase(); 
+  
+ // Filtra elementi dinamici 
+ document.querySelectorAll('.archive-item-dynamic').forEach(item => { 
+ const materia = item.getAttribute('data-materia') || ''; 
+ const argomento = item.getAttribute('data-argomento') || ''; 
+ const docente = item.getAttribute('data-docente') || ''; 
+ if(materia.includes(query) || argomento.includes(query) || docente.includes(query)) { 
+ item.style.display = 'flex'; 
+ } else { 
+ item.style.display = 'none'; 
+ } 
+ }); 
+ }; 
+ 
+ window.filterMarketplace = function() { 
+ const searchInput = document.getElementById('marketSearch'); 
+ const priceInput = document.getElementById('marketPriceMax'); 
+ if(!searchInput || !priceInput) return; 
+ const query = searchInput.value.toLowerCase(); 
+ const maxPrice = parseFloat(priceInput.value) || Infinity; 
+ document.querySelectorAll('.market-card-grid').forEach(item => { 
+ const title = (item.getAttribute('data-title') || '').toLowerCase(); 
+ const author = (item.getAttribute('data-author') || '').toLowerCase(); 
+ const price = parseFloat(item.getAttribute('data-price')) || 0; 
+ item.style.display = ((title.includes(query) || author.includes(query)) && price <= maxPrice) ? 'flex' : 'none'; 
+ }); 
+ }; 
+ 
+ window.apriIscrizioneTorneoStatico = function(nomeTorneo) { 
+ document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo; 
+ window.currentTorneoNome = nomeTorneo; 
+ document.getElementById('ruoloTorneoSezione').style.display = 'block'; 
+ navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO'); 
+ }; 
  </script>
-
-
- <script>
- (function() {
- const SUPABASE_URL = "https://kijgeyfhvvrmriwpvebm.supabase.co";
- const SUPABASE_KEY = "sb_publishable_5WJ5tNUj_NpdfbdQAIiVWQ_KPXYc_VM";
- const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
- // 1. GESTIONE DEVICE_ID
- function getDeviceId() {
- let id = localStorage.getItem('lista2_device_id');
- if (!id) {
- id = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
- localStorage.setItem('lista2_device_id', id);
- }
- return id;
- }
- const deviceId = getDeviceId();
-
- const gradientiDomande = ['orange-gradient', 'red-gradient', 'purple-gradient', 'blue-gradient', 'green-gradient'];
- let likedPosts = new Set();
- let selectedQuestionGradient = 'orange-gradient';
- let questionViewerIndex = 0;
- const defaultQuestions = [
- { testo: 'Quali sono le proposte principali per strutturare le assemblee?', gradiente: 'red-gradient' },
- { testo: 'Riusciremo ad avere sconti reali anche per i libri scolastici?', gradiente: 'purple-gradient' },
- { testo: "Verranno organizzati tornei sportivi d'istituto?", gradiente: 'blue-gradient' },
- { testo: 'Come possiamo proporre nuovi partner per le convenzioni?', gradiente: 'orange-gradient' }
- ];
- let allQuestionsData = [...defaultQuestions];
- const navigateOriginale = window.navigateTo;
- if(typeof navigateOriginale === 'function') {
- window.navigateTo = function(viewId, navButton, titleText) {
- navigateOriginale(viewId, navButton, titleText);
- if(viewId === 'view-all-questions') renderQuestionViewer();
- if(viewId === 'view-add-question') updateQuestionPreview();
- if(viewId === 'view-votazioni') window.caricaVotazioniEGrafico();
- if(viewId === 'view-archivio-storico-votazioni') window.caricaArchivioVotazioni();
- };
- }
-
- function updateLikeCount(postId, count) {
- document.querySelectorAll('.like-btn[data-post-id="' + postId + '"]').forEach(button => {
- const countSpan = button.querySelector('.like-count');
- if(countSpan) countSpan.textContent = count;
- if(likedPosts.has(Number(postId))) button.classList.add('liked');
- else button.classList.remove('liked');
- });
- }
-
- async function caricaLikePost() {
- if(!db) return;
- const postButtons = document.querySelectorAll('.like-btn[data-post-id]');
-
- // 1. Ottieni tutti i like per contare e verificare l'utente attuale
- const { data: allLikes, error: errLikes } = await db.from('post_likes').select('post_id, device_id');
- if(errLikes) return console.error("Errore caricamento like:", errLikes);
-
- // 2. Filtra i like dell'utente attuale
- likedPosts = new Set(allLikes.filter(l => l.device_id === deviceId).map(l => Number(l.post_id)));
-
- // 3. Conta i like per ogni post e aggiorna il DOM
- postButtons.forEach(button => {
- const postId = Number(button.dataset.postId);
- const defaultLikes = Number(button.dataset.defaultLikes || 0);
- const dbLikesCount = allLikes.filter(l => Number(l.post_id) === postId).length;
- updateLikeCount(postId, dbLikesCount + defaultLikes);
- });
- }
-
- window.toggleLike = async function(button) {
- const postId = Number(button.dataset.postId);
- if(!postId) return;
-
- const wasLiked = likedPosts.has(postId);
- const delta = wasLiked ? -1 : 1;
-
- // Aggiornamento DOM Istantaneo
- const countSpan = button.querySelector('.like-count');
- const countAttuale = parseInt(countSpan.textContent, 10) || 0;
- if(wasLiked) likedPosts.delete(postId);
- else likedPosts.add(postId);
- updateLikeCount(postId, Math.max(0, countAttuale + delta));
-
- if(!db) return;
-
- if(wasLiked) {
- // Rimuovi il like
- const { error } = await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId);
- if(error) {
- likedPosts.add(postId);
- updateLikeCount(postId, countAttuale);
- }
- } else {
- // Aggiungi il like
- const { error } = await db.from('post_likes').insert({ post_id: postId, device_id: deviceId });
- if(error) {
- // Se fallisce (es. già presente), proviamo a rimuoverlo (toggle)
- await db.from('post_likes').delete().eq('post_id', postId).eq('device_id', deviceId);
- likedPosts.delete(postId);
- updateLikeCount(postId, countAttuale);
- }
- }
- };
-
- function creaCardDomanda(domanda) {
- const card = document.createElement('div');
- card.className = 'ngl-card';
- const header = document.createElement('div');
- header.className = 'ngl-header ' + (gradientiDomande.includes(domanda.gradiente) ? domanda.gradiente : 'orange-gradient');
- header.textContent = 'Anonimo';
- const body = document.createElement('div');
- body.className = 'ngl-body';
- const text = document.createElement('p');
- text.className = 'question-text';
- text.textContent = domanda.testo || '';
- body.appendChild(text);
- card.appendChild(header);
- card.appendChild(body);
- return card;
- }
-
- window.chooseQuestionGradient = function(gradiente, button) {
- selectedQuestionGradient = gradientiDomande.includes(gradiente) ? gradiente : 'orange-gradient';
- document.querySelectorAll('.question-color-choice').forEach(choice => choice.classList.remove('active'));
- if(button) button.classList.add('active');
- updateQuestionPreview();
- };
-
- window.updateQuestionPreview = function() {
- const input = document.getElementById('newQuestionText');
- const previewHeader = document.getElementById('questionPreviewHeader');
- const previewText = document.getElementById('questionPreviewText');
- if(previewHeader) {
- previewHeader.className = 'ngl-header ' + selectedQuestionGradient;
- previewHeader.textContent = 'Anonimo';
- }
- if(previewText) previewText.textContent = input && input.value.trim() ? input.value.trim() : "Scrivi una domanda per vedere l'anteprima...";
- };
-
- function renderQuestionViewer() {
- const domanda = allQuestionsData[questionViewerIndex] || allQuestionsData[0];
- const card = document.getElementById('questionViewerCard');
- const header = document.getElementById('questionViewerHeader');
- const text = document.getElementById('questionViewerText');
- const counter = document.getElementById('questionCounter');
- if(!card || !header || !text || !counter) return;
- if(!domanda) {
- header.className = 'ngl-header orange-gradient';
- text.textContent = 'Non ci sono ancora domande.';
- counter.textContent = 'Domanda 0 di 0';
- return;
- }
- const gradiente = gradientiDomande.includes(domanda.gradiente) ? domanda.gradiente : 'orange-gradient';
- header.className = 'ngl-header ' + gradiente;
- text.textContent = domanda.testo || '';
- counter.textContent = 'Domanda ' + (questionViewerIndex + 1) + ' di ' + allQuestionsData.length;
- }
-
- window.changeQuestion = function(step) {
- if(!allQuestionsData.length) return;
- questionViewerIndex = (questionViewerIndex + step + allQuestionsData.length) % allQuestionsData.length;
- renderQuestionViewer();
- const pocket = document.getElementById('answerPocket');
- if(pocket) pocket.classList.remove('active');
- };
-
- window.toggleAnswerPocket = function() {
- const pocket = document.getElementById('answerPocket');
- if(pocket) pocket.classList.toggle('active');
- };
-
- window.submitQuestionAnswer = function() {
- const answer = document.getElementById('questionAnswerText');
- if(!answer || !answer.value.trim()) return alert('Scrivi una risposta prima di inviarla.');
- answer.value = '';
- alert('Risposta salvata come bozza.');
- };
-
- window.caricaDomande = async function() {
- if(!db) {
- allQuestionsData = [...defaultQuestions];
- renderQuestionViewer();
- return;
- }
- const { data, error } = await db.from('domande_anonime').select('*').order('creato_il', { ascending: false });
- if(error) return;
- const dynamicHome = document.getElementById('domandeDynamicHome');
- if(dynamicHome) dynamicHome.innerHTML = '';
- (data || []).forEach(domanda => {
- if(dynamicHome) dynamicHome.appendChild(creaCardDomanda(domanda));
- });
- allQuestionsData = [...defaultQuestions, ...(data || [])];
- if(questionViewerIndex >= allQuestionsData.length) questionViewerIndex = 0;
- renderQuestionViewer();
- };
-
- window.inviaDomanda = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
- const input = document.getElementById('newQuestionText');
- const testo = input.value.trim();
- if(!testo) return alert('Inserisci una domanda!');
- const gradiente = selectedQuestionGradient;
- const { error } = await db.from('domande_anonime').insert({ testo, gradiente });
- if(error) return alert("Errore nell'invio della domanda.");
- input.value = '';
- selectedQuestionGradient = 'orange-gradient';
- document.querySelectorAll('.question-color-choice').forEach((choice, index) => choice.classList.toggle('active', index === 0));
- updateQuestionPreview();
- await window.caricaDomande();
- navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
- };
-
- function formatPrezzo(prezzo, tipo) {
- const numero = Number(prezzo || 0);
- const testoPrezzo = Number.isInteger(numero) ? String(numero) : numero.toFixed(2).replace('.', ',');
- return tipo === 'Studio' ? testoPrezzo + '€/h' : testoPrezzo + '€';
- }
-
- function creaCardMarketplace(item, grid) {
- const card = document.createElement('div');
- card.className = grid ? 'market-card-scroll market-card-grid' : 'market-card-scroll';
- if(grid) {
- card.setAttribute('data-title', String(item.titolo || '').toLowerCase());
- card.setAttribute('data-author', String(item.autore || '').toLowerCase());
- card.setAttribute('data-price', String(item.prezzo || 0));
- }
- const info = document.createElement('div');
- info.className = 'market-info-scroll';
- const title = document.createElement('h4');
- title.textContent = item.titolo || '';
- const author = document.createElement('span');
- author.className = 'market-author-scroll';
- author.textContent = item.autore || '';
- const footer = document.createElement('div');
- footer.className = 'market-footer-scroll';
- const price = document.createElement('span');
- price.className = 'price-tag';
- price.setAttribute('style', 'background:#0f172a; color:#fff; font-size:11px; padding:3px 8px; border-radius:10px;');
- price.textContent = formatPrezzo(item.prezzo, item.tipo);
- const type = document.createElement('span');
- type.setAttribute('style', 'font-size:10.5px; color:#64748b; font-weight:600;');
- type.textContent = item.tipo || '';
- footer.appendChild(price);
- footer.appendChild(type);
- info.appendChild(title);
- info.appendChild(author);
- info.appendChild(footer);
- card.appendChild(info);
- return card;
- }
-
- window.caricaMarketplace = async function() {
- if(!db) return;
- const { data, error } = await db.from('marketplace').select('*').order('creato_il', { ascending: false });
- if(error) return;
- const dynamicHome = document.getElementById('marketDynamicHome');
- const dynamicList = document.getElementById('marketDynamicList');
- if(dynamicHome) dynamicHome.innerHTML = '';
- if(dynamicList) dynamicList.innerHTML = '';
- (data || []).forEach(item => {
- if(dynamicHome) dynamicHome.appendChild(creaCardMarketplace(item, false));
- if(dynamicList) dynamicList.appendChild(creaCardMarketplace(item, true));
- });
- filterMarketplace();
- };
-
- window.inviaAnnuncio = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
- const titolo = document.getElementById('marketTitle').value.trim();
- const autore = document.getElementById('marketAuthor').value.trim();
- const prezzo = parseFloat(document.getElementById('marketPrice').value);
- const tipo = document.getElementById('marketType').value;
- if(!titolo || !autore || Number.isNaN(prezzo)) return alert('Compila tutti i campi!');
- const { error } = await db.from('marketplace').insert({ titolo, autore, prezzo, tipo });
- if(error) return alert("Errore nella pubblicazione dell'annuncio.");
- document.getElementById('marketTitle').value = '';
- document.getElementById('marketAuthor').value = '';
- document.getElementById('marketPrice').value = '';
- await window.caricaMarketplace();
- navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
- };
-
- window.inviaPropostaAssemblea = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
- const titolo = document.getElementById('propostaTitolo').value.trim();
- const descrizione = document.getElementById('propostaDescrizione').value.trim();
- if(!titolo || !descrizione) return alert('Compila tutti i campi!');
- const { error } = await db.from('proposte_assemblee').insert({ titolo, descrizione });
- if(error) return alert("Errore nell'invio della proposta.");
- alert('Proposta inviata con successo!');
- document.getElementById('propostaTitolo').value = '';
- document.getElementById('propostaDescrizione').value = '';
- navigateTo('view-calendario', null, 'AGENDA ASSEMBLEE');
- };
-
- window.updateFileNameDisplay = function(input) {
- const display = document.getElementById('fileNameDisplay');
- if(input.files && input.files[0]) {
- display.textContent = "File selezionato: " + input.files[0].name;
- display.style.color = "var(--accent-color)";
- display.style.fontWeight = "bold";
- } else {
- display.textContent = "Seleziona un file (PDF, Immagine...)";
- display.style.color = "#64748b";
- display.style.fontWeight = "normal";
- }
- };
-
- window.downloadFile = async function(fileDati, nomeFile) {
- if(!db) return;
-
- const modal = document.getElementById('downloadModal');
- const fileNameText = document.getElementById('downloadFileName');
- const progressBar = document.getElementById('downloadProgressBar');
- const progressText = document.getElementById('downloadProgressText');
-
- fileNameText.textContent = nomeFile;
- modal.style.display = 'flex';
- progressBar.style.width = '0%';
- progressText.textContent = '0%';
-
- try {
- // 1. Ottieni immediatamente l'URL per bypassare popup blocker su mobile (deve essere sincrono al click)
- let downloadUrl = null;
- if(fileDati && !fileDati.startsWith('static/')) {
- const { data } = db.storage.from('archivio_pdf').getPublicUrl(fileDati);
- downloadUrl = data.publicUrl;
- }
-
- if (!downloadUrl) {
- modal.style.display = 'none';
- return alert("File non disponibile o statico: " + nomeFile);
- }
-
- // 2. Apri il file IMMEDIATAMENTE (gesture utente)
- window.open(downloadUrl, '_blank');
-
- // 3. Mostra comunque la barra di progresso per feedback visivo
- for (let p = 0; p <= 100; p += 10) {
- progressBar.style.width = p + '%';
- progressText.textContent = p + "%";
- await new Promise(r => setTimeout(r, 50));
- }
-
- setTimeout(() => {
- modal.style.display = 'none';
- }, 300);
-
- } catch (err) {
- modal.style.display = 'none';
- alert("Errore durante il download.");
- }
- };
-
- window.inviaAppunti = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
- const materia = document.getElementById('appuntiMateria').value.trim();
- const argomento = document.getElementById('appuntiArgomento').value.trim();
- const docente = document.getElementById('appuntiDocente').value.trim();
- const note = document.getElementById('appuntiNote').value.trim();
- const fileInput = document.getElementById('appuntiFile');
-
- if(!materia || !argomento || !docente) return alert('Compila i campi obbligatori (Materia, Argomento, Docente)!');
- if(!fileInput.files || !fileInput.files[0]) return alert('Seleziona un file da caricare!');
-
- const file = fileInput.files[0];
- const nome_file = file.name;
-
- // UI Progress
- const progressContainer = document.getElementById('uploadProgressContainer');
- const progressBar = document.getElementById('uploadProgressBar');
- const progressText = document.getElementById('uploadProgressText');
- const btnInvia = document.getElementById('btnInviaAppunti');
-
- progressContainer.style.display = 'block';
- btnInvia.disabled = true;
- btnInvia.style.opacity = '0.5';
-
- // Step 1: Upload del file nello Storage
- const nomeUnico = Date.now() + "_" + nome_file;
- progressBar.style.width = '30%';
- progressText.textContent = "Caricamento nello Storage...";
-
- const { data: storageData, error: storageError } = await db
- .storage
- .from('archivio_pdf')
- .upload(nomeUnico, file);
-
- if (storageError) {
- progressContainer.style.display = 'none';
- btnInvia.disabled = false;
- btnInvia.style.opacity = '1';
- return alert("Errore nello Storage: " + storageError.message);
- }
-
- const file_dati = storageData.path;
-
- progressBar.style.width = '70%';
- progressText.textContent = "Salvataggio nel Database...";
-
- const { error } = await db.from('archivio_appunti').insert({ materia, argomento, docente, note, file_dati, nome_file });
- if(error) return alert("Errore nel caricamento degli appunti.");
-
- alert('Appunti caricati con successo!');
- // Reset UI
- progressContainer.style.display = 'none';
- progressBar.style.width = '0%';
- btnInvia.disabled = false;
- btnInvia.style.opacity = '1';
-
- // Reset campi
- document.getElementById('appuntiMateria').value = '';
- document.getElementById('appuntiArgomento').value = '';
- document.getElementById('appuntiDocente').value = '';
- document.getElementById('appuntiNote').value = '';
- fileInput.value = '';
- document.getElementById('fileNameDisplay').textContent = "Seleziona un file (PDF, Immagine...)";
-
- await window.caricaArchivioAppunti();
- navigateTo('view-archivio', null, 'DRIVE APPUNTI');
- };
-
- function escapeHTML(str) {
- if(!str) return "";
- return str.replace(/[&<>"']/g, function(m) {
- return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
- });
- }
-
- function creaCardAppunto(appunto) {
- const card = document.createElement('div');
- card.className = 'note-card archive-item-dynamic';
- card.style.cursor = 'pointer';
- card.setAttribute('data-materia', (appunto.materia || '').toLowerCase());
- card.setAttribute('data-argomento', (appunto.argomento || '').toLowerCase());
- card.setAttribute('data-docente', (appunto.docente || '').toLowerCase());
-
- card.innerHTML = `
- <div class="note-icon">
- <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
- </div>
- <div class="note-info">
- <h4>${escapeHTML(appunto.materia)}</h4>
- <p><strong>${escapeHTML(appunto.argomento)}</strong><br>Prof. ${escapeHTML(appunto.docente)}</p>
- ${appunto.note ? `<p style="font-style: italic; margin-top: 4px;">${escapeHTML(appunto.note)}</p>` : ''}
- <div class="note-meta">Caricato da uno studente</div>
- </div>
- <div class="note-download-icon" style="flex-shrink:0; margin-left:8px;">
- <svg viewBox="0 0 24 24" width="20" height="20" fill="#94a3b8"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
- </div>
- `;
-
- card.onclick = () => window.downloadFile(appunto.file_dati, appunto.nome_file);
- return card;
- }
-
- window.caricaArchivioAppunti = async function() {
- if(!db) return;
- const { data, error } = await db.from('archivio_appunti').select('*').order('creato_il', { ascending: false });
- if(error) return;
- const dynamicList = document.getElementById('archiveDynamicList');
- if(dynamicList) {
- dynamicList.innerHTML = '';
- (data || []).forEach(appunto => {
- dynamicList.appendChild(creaCardAppunto(appunto));
- });
- }
- if(typeof window.filterArchive === 'function') window.filterArchive();
- };
-
- window.filterArchive = function() {
- const query = (document.getElementById('archiveSearch')?.value || '').toLowerCase();
-
- // Filtra elementi dinamici
- document.querySelectorAll('.archive-item-dynamic').forEach(item => {
- const materia = item.getAttribute('data-materia') || '';
- const argomento = item.getAttribute('data-argomento') || '';
- const docente = item.getAttribute('data-docente') || '';
- if(materia.includes(query) || argomento.includes(query) || docente.includes(query)) {
- item.style.display = 'flex';
- } else {
- item.style.display = 'none';
- }
- });
- };
-
- window.filterMarketplace = function() {
- const searchInput = document.getElementById('marketSearch');
- const priceInput = document.getElementById('marketPriceMax');
- if(!searchInput || !priceInput) return;
- const query = searchInput.value.toLowerCase();
- const maxPrice = parseFloat(priceInput.value) || Infinity;
- document.querySelectorAll('.market-card-grid').forEach(item => {
- const title = (item.getAttribute('data-title') || '').toLowerCase();
- const author = (item.getAttribute('data-author') || '').toLowerCase();
- const price = parseFloat(item.getAttribute('data-price')) || 0;
- item.style.display = ((title.includes(query) || author.includes(query)) && price <= maxPrice) ? 'flex' : 'none';
- });
- };
-
- window.apriIscrizioneTorneoStatico = function(nomeTorneo) {
- document.getElementById('titoloTorneoIscrizione').textContent = 'Iscrizione Torneo di ' + nomeTorneo;
- window.currentTorneoNome = nomeTorneo;
- document.getElementById('ruoloTorneoSezione').style.display = 'block';
- navigateTo('view-iscrizione-torneo', null, 'ISCRIZIONE TORNEO');
- };
-
- window.toggleSezioneCapitano = function(show) {
- const sezione = document.getElementById('sezioneCapitano');
- sezione.style.display = show ? 'flex' : 'none';
- };
-
- window.generaCampiMembri = function(count) {
- const container = document.getElementById('containerMembriSquadra');
- container.innerHTML = '';
- const n = parseInt(count) || 0;
- if(n > 20) { alert('Massimo 20 membri!'); return; }
-
- for(let i = 1; i <= n; i++) {
- const div = document.createElement('div');
- div.style.cssText = "display:flex; flex-direction:column; gap:8px; padding:12px; background:#f8fafc; border-radius:14px; border:1px solid #f1f5f9;";
- div.innerHTML = `
- <p style="font-size:11px; font-weight:800; color:var(--accent-color);">MEMBRO #${i}</p>
- <input type="text" class="filter-input membro-nome" placeholder="Nome e Cognome">
- <div style="display:flex; gap:10px;">
- <input type="text" class="filter-input membro-classe" style="flex:1;" placeholder="Classe">
- ${window.currentTorneoNome !== 'Pallavolo' ? `<input type="text" class="filter-input membro-ruolo" style="flex:2;" placeholder="Ruolo">` : ''}
- </div>
- `;
- container.appendChild(div);
- }
- };
-
- window.inviaIscrizioneTorneo = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
-
- const nome = document.getElementById('iscrizioneNome').value.trim();
- const cognome = document.getElementById('iscrizioneCognome').value.trim();
- const classe = document.getElementById('iscrizioneClasse').value.trim();
- const email = document.getElementById('iscrizioneEmail').value.trim();
- const ruolo = document.querySelector('input[name="ruoloTorneo"]:checked').value;
-
- if(!nome || !cognome || !classe || !email) return alert('Compila tutti i campi personali!');
-
- let datiIscrizione = {
- nome,
- cognome,
- classe,
- email,
- tipo_iscrizione: ruolo
- };
-
- if(ruolo === 'capitano') {
- const squadraNome = document.getElementById('squadraNome').value.trim();
- if(!squadraNome) return alert('Inserisci il nome della squadra!');
-
- const membri = [];
- document.querySelectorAll('#containerMembriSquadra > div').forEach(div => {
- const ruoloInput = div.querySelector('.membro-ruolo');
- membri.push({
- nome: div.querySelector('.membro-nome').value.trim(),
- classe: div.querySelector('.membro-classe').value.trim(),
- ruolo: ruoloInput ? ruoloInput.value.trim() : ''
- });
- });
-
- datiIscrizione.nome_squadra = squadraNome;
- datiIscrizione.numero_membri = membri.length;
- datiIscrizione.membri_squadra = membri;
- }
-
- const { error } = await db.from('iscrizione_tornei').insert(datiIscrizione);
- if(error) return alert("Errore durante l'invio dell'iscrizione: " + error.message);
-
- alert('Iscrizione inviata con successo!');
- // Reset
- document.getElementById('iscrizioneNome').value = '';
- document.getElementById('iscrizioneCognome').value = '';
- document.getElementById('iscrizioneClasse').value = '';
- document.getElementById('iscrizioneEmail').value = '';
- document.getElementById('squadraNome').value = '';
- document.getElementById('squadraMembriCount').value = '';
- document.getElementById('containerMembriSquadra').innerHTML = '';
- toggleSezioneCapitano(false);
- document.querySelector('input[name="ruoloTorneo"][value="spettatore"]').checked = true;
-
- navigateTo('view-home', document.querySelector('.nav-item'), 'BENVENUTI SULL\'APP<br>DELLA LISTA 2');
- };
-
- let votingChart = null;
-
- window.inviaPropostaVotazione = async function() {
- if(!db) return alert('Connessione a Supabase non disponibile.');
- const titolo = document.getElementById('votazioneTitolo').value.trim();
- const descrizione = document.getElementById('votazioneDescrizione').value.trim();
- const categoria = document.getElementById('votazioneCategoria').value;
-
- if(!titolo || !descrizione) return alert('Compila tutti i campi!');
-
- const { error } = await db.from('proposte_votazione').insert({
- titolo,
- descrizione,
- categoria
- });
-
- if(error) return alert("Errore nell'invio della proposta.");
-
- alert('Proposta inviata con successo! Verrà esaminata dai rappresentanti.');
- document.getElementById('votazioneTitolo').value = '';
- document.getElementById('votazioneDescrizione').value = '';
- navigateTo('view-votazioni', null, 'VOTAZIONI');
- };
-
- window.caricaVotazioniEGrafico = async function() {
- if(!db) return;
-
- // 1. Recupera proposte attive
- const { data: proposte, error: errProp } = await db.from('proposte_votazione').select('*');
- if(errProp) return console.error("Errore proposte:", errProp);
-
- // 2. Recupera tutti i voti per verificare se l'utente ha votato (Regola: un solo voto in totale)
- const { data: voti, error: errVoti } = await db.from('voti_proposte').select('*');
- if(errVoti) return console.error("Errore voti:", errVoti);
-
- const container = document.getElementById('proposteAttiveList');
- if(!container) return;
- container.innerHTML = '';
-
- const labels = [];
- const counts = [];
-
- // Verifica se l'utente ha già votato una qualsiasi proposta
- const hasVotedAny = voti.some(v => v.device_id === deviceId);
-
- proposte.forEach(p => {
- const numVoti = voti.filter(v => v.proposta_id === p.id).length;
- labels.push(p.titolo);
- counts.push(numVoti);
-
- const card = document.createElement('div');
- card.className = 'voting-card';
-
- // Se l'utente ha votato QUESTA proposta specifica
- const votedThis = voti.some(v => v.device_id === deviceId && v.proposta_id === p.id);
-
- card.innerHTML = `
- <div class="voting-info">
- <h4>${escapeHTML(p.titolo)}</h4>
- <p>${escapeHTML(p.descrizione || '')}</p>
- </div>
- <button class="vota-btn" ${hasVotedAny ? 'disabled' : ''} onclick="inviaVoto(${p.id})">
- ${votedThis ? 'Votato' : (hasVotedAny ? 'Chiuso' : 'Vota')}
- </button>
- `;
- container.appendChild(card);
- });
-
- const ctx = document.getElementById('votingChart');
- if (ctx) updateChart(labels, counts);
- };
-
- function updateChart(labels, data) {
- const ctx = document.getElementById('votingChart').getContext('2d');
- if(votingChart) {
- votingChart.data.labels = labels;
- votingChart.data.datasets[0].data = data;
- votingChart.update();
- } else {
- votingChart = new Chart(ctx, {
- type: 'doughnut',
- data: {
- labels: labels,
- datasets: [{
- data: data,
- backgroundColor: ['#17427a', '#3b82f6', '#93c5fd', '#60a5fa', '#2563eb'],
- borderWidth: 0
- }]
- },
- options: {
- rotation: -90,
- circumference: 180,
- cutout: '70%',
- plugins: {
- legend: { position: 'bottom' }
- }
- }
- });
- }
- }
-
- window.inviaVoto = async function(propostaId) {
- if(!db) return;
-
- // Verifica locale aggiuntiva (il server lo bloccherà comunque se usiamo un constraint unique su device_id)
- // Ma l'utente ha chiesto un solo voto in TOTALE tra tutte le proposte.
- // Se la tabella voti_proposte ha un constraint unique su device_id, allora può votare solo una volta.
-
- const { data: check } = await db.from('voti_proposte').select('id').eq('device_id', deviceId).maybeSingle();
- if(check) return alert('Hai già espresso il tuo unico voto disponibile!');
-
- const { error } = await db.from('voti_proposte').insert({ proposta_id: propostaId, device_id: deviceId });
- if(error) {
- alert('Errore durante l\'invio del voto.');
- return;
- }
- window.caricaVotazioniEGrafico();
- };
-
- window.caricaArchivioVotazioni = async function() {
- if(!db) return;
- const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false });
- if(error) return;
-
- const container = document.getElementById('archivioVotazioniList');
- if(!container) return;
- container.innerHTML = '';
-
- data.forEach(item => {
- const card = document.createElement('div');
- card.className = 'archive-vote-card';
- card.innerHTML = `
- <div class="archive-vote-header">
- <h4>${escapeHTML(item.titolo)}</h4>
- <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span>
- </div>
- <div class="archive-vote-details">
- Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong>
- </div>
- `;
- container.appendChild(card);
- });
- };
-
- function attivaRealtime() {
- if(!db) return;
- db.channel('lista2-realtime')
- .on('postgres_changes', { event: '*', schema: 'public', table: 'domande_anonime' }, () => window.caricaDomande())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace' }, () => window.caricaMarketplace())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost())
- .on('postgres_changes', { event: '*', schema: 'public', table: 'voti_proposte' }, () => window.caricaVotazioniEGrafico())
- .subscribe();
- }
-
- // Caricamento sicuro di tutti i componenti con gestione errori individuale
- async function initApp() {
- const tasks = [
- { name: 'Like', fn: caricaLikePost },
- { name: 'Domande', fn: window.caricaDomande },
- { name: 'Marketplace', fn: window.caricaMarketplace },
- { name: 'Archivio Appunti', fn: window.caricaArchivioAppunti },
- { name: 'Votazioni', fn: window.caricaVotazioniEGrafico },
- { name: 'Storico Votazioni', fn: window.caricaArchivioVotazioni }
- ];
-
- for (const task of tasks) {
- try {
- if (typeof task.fn === 'function') await task.fn();
- } catch (err) {
- console.error(`Errore nel caricamento del modulo ${task.name}:`, err);
- }
- }
- attivaRealtime();
- }
-
- initApp();
- })();
- </script>
-
 </body>
 </html>
