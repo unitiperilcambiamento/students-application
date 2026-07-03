@@ -10,7 +10,10 @@
  <meta name="apple-mobile-web-app-capable" content="yes"> 
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
  <meta name="apple-mobile-web-app-title" content="Lista 2"> 
- <meta name="mobile-web-app-capable" content="yes"> 
+ <meta name="mobile-web-app-capable" content="yes">
+ <meta name="theme-color" id="theme-color-meta" content="#0f2d59">
+ 
+ 
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
  
@@ -1149,11 +1152,23 @@
  
  // 5. CAMBIO COLORE REALE CON INIEZIONE NELLE VARIABILI ROOT 
  function setAppTheme(startColor, endColor, accentColor, lightAccent) { 
- document.documentElement.style.setProperty('--primary-grad-start', startColor); 
- document.documentElement.style.setProperty('--primary-grad-end', endColor); 
- document.documentElement.style.setProperty('--accent-color', accentColor); 
- document.documentElement.style.setProperty('--accent-light', lightAccent); 
- } 
+    document.documentElement.style.setProperty('--primary-grad-start', startColor); 
+    document.documentElement.style.setProperty('--primary-grad-end', endColor); 
+    document.documentElement.style.setProperty('--accent-color', accentColor); 
+    document.documentElement.style.setProperty('--accent-light', lightAccent); 
+    
+    // LA MAGIA: Cambia il colore della barra di stato del telefono (orario/batteria) in tempo reale!
+    const metaTheme = document.getElementById('theme-color-meta');
+    if (metaTheme) {
+        metaTheme.setAttribute('content', startColor);
+    }
+    
+    // Salva la scelta dell'utente per mantenerla nelle sessioni successive
+    localStorage.setItem('lista2_theme_start', startColor);
+    localStorage.setItem('lista2_theme_end', endColor);
+    localStorage.setItem('lista2_theme_accent', accentColor);
+    localStorage.setItem('lista2_theme_light', lightAccent);
+}
  
  // 6. MOTORE CALENDARIO DINAMICO REALE SULLE ASSEMBLEE 
  let currentDate = new Date(2026, 5, 1); // Giugno 2026 
@@ -2044,6 +2059,26 @@
   
  initApp(); 
  })(); 
+
+
+
+
+// CONTROLLO ALL'AVVIO: Ripristina l'ultimo tema salvato dall'utente
+document.addEventListener('DOMContentLoaded', () => {
+    const savedStart = localStorage.getItem('lista2_theme_start');
+    const savedEnd = localStorage.getItem('lista2_theme_end');
+    const savedAccent = localStorage.getItem('lista2_theme_accent');
+    const savedLight = localStorage.getItem('lista2_theme_light');
+
+    // Se l'utente aveva salvato un tema personalizzato in precedenza, applicalo!
+    if (savedStart && savedEnd && savedAccent && savedLight) {
+        setAppTheme(savedStart, savedEnd, savedAccent, savedLight);
+    }
+});
+
+
+
+
  </script> 
  
 </body> 
