@@ -285,7 +285,7 @@
  .question-arrow.next { right: -17px; }
  .answer-bubble { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--accent-color); color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; transition: transform 0.2s; }
  .answer-bubble:active { transform: translate(-50%, -50%) scale(0.9); }
- .question-counter { text-align: center; margin-top: 20px; margin-bottom: 20px; color: #64748b; font-size: 12px; font-weight: 700; }
+ .question-counter { text-align: center; margin-top: 40px; margin-bottom: 20px; color: #64748b; font-size: 12px; font-weight: 700; }
  .question-answer-pocket { display: none; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); flex-direction: column; gap: 10px; }
  .question-answer-pocket.active { display: flex; animation: smoothFade 0.4s; }
  .question-answer-pocket textarea { min-height: 82px; resize: none; }
@@ -645,6 +645,7 @@
  </section>
 
 
+
  <!-- SEZIONE PROPOSTE E VOTAZIONI -->
  <section class="section-container">
  <h2 class="section-title-margin">Proposte e Votazioni</h2>
@@ -937,6 +938,7 @@
  <!-- Caricato dinamicamente -->
  </div>
  </div>
+
 
 
  <!-- ================= VISTA: CARICA APPUNTI ================= -->
@@ -1806,7 +1808,6 @@
  <input type="text" class="filter-input membro-nome" placeholder="Nome e Cognome">
  <div style="display:flex; gap:10px;">
  <input type="text" class="filter-input membro-classe" style="flex:1;" placeholder="Classe">
- ${window.currentTorneoNome !== 'Pallavolo' ? `<input type="text" class="filter-input membro-ruolo" style="flex:2;" placeholder="Ruolo">` : ''}
  </div>
  `;
  container.appendChild(div);
