@@ -1,11 +1,12 @@
 {
-  "name": "App Studenti - Istituto Manzoni",
-  "short_name": "Studapp",
-  "description": "App per gli studenti dell'Istituto Manzoni.",
-  "start_url": "app.html",
+  "name": "App Lista 2",
+  "short_name": "Lista 2",
+  "description": "L'app ufficiale della Lista 2",
+  "start_url": "./app.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#22c55e",
+  "background_color": "#0e1e38",
+  "theme_color": "#0f2d59",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "lista.png",
