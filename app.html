@@ -465,12 +465,35 @@
  .archive-vote-header h4 { font-size: 13.5px; color: #0f172a; font-weight: 700; } 
  .archive-winner-badge { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; } 
  .archive-vote-details { font-size: 11.5px; color: #64748b; } 
+ 
+ #ios-status-bar-spacer {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    /* Prende l'altezza della barra di stato dell'iPhone notch/isola */
+    height: env(safe-area-inset-top, 20px); 
+    background-color: var(--primary-grad-start);
+    z-index: 9999; /* Sta sopra a tutto */
+    display: none; /* Di base è nascosto, lo attiviamo solo su iPhone installato */
+}
+
+/* Se l'app è avviata da schermo intero (PWA installata) su iOS */
+@media (display-mode: standalone) {
+    #ios-status-bar-spacer {
+        display: block;
+    }
+}
+ 
+ 
+ 
  </style> 
 </head> 
 <body> 
  
+
  <div class="app-container"> 
  
+<div id="ios-status-bar-spacer"></div>
  <!-- HEADER GLOBALE --> 
  <header class="app-header"> 
  <div class="logos-container"> 
