@@ -719,6 +719,7 @@
  </div>
  <div class="question-counter" id="questionCounter">Domanda 1 di 1</div>
  <div id="answerPocket" class="question-answer-pocket">
+ <div id="commentsList" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
  <textarea id="questionAnswerText" class="filter-input" placeholder="Scrivi una risposta alla domanda..."></textarea>
  <button class="answer-send-btn" onclick="submitQuestionAnswer()">Rispondi</button>
  </div>
@@ -1445,24 +1446,77 @@
  counter.textContent = 'Domanda ' + (questionViewerIndex + 1) + ' di ' + allQuestionsData.length;
  }
 
+ window.caricaRisposteDomanda = async function(domandaId) {
+ const container = document.getElementById('commentsList');
+ if(!container) return;
+ container.innerHTML = '';
+ if(!domandaId || !db) {
+ container.innerHTML = '<p style="font-size:12px; color:#64748b; text-align:center; padding:6px;">Nessuna risposta ancora presente.</p>';
+ return;
+ }
+ const { data, error } = await db
+ .from('risposte_domande')
+ .select('*')
+ .eq('domanda_id', domandaId)
+ .order('creato_il', { ascending: true });
+
+ if(error) {
+ console.error("Errore nel caricamento delle risposte:", error);
+ container.innerHTML = '<p style="font-size:12px; color:#64748b; text-align:center; padding:6px;">Nessuna risposta ancora presente.</p>';
+ return;
+ }
+
+ if(!data || data.length === 0) {
+ container.innerHTML = '<p style="font-size:12px; color:#64748b; text-align:center; padding:6px;">Nessuna risposta ancora presente.</p>';
+ return;
+ }
+
+ data.forEach(risposta => {
+ const div = document.createElement('div');
+ div.className = 'comment-item';
+ div.style.cssText = 'background: #f8fafc; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; color: #334155; border: 1px solid #f1f5f9; word-break: break-word;';
+ div.textContent = risposta.testo || '';
+ container.appendChild(div);
+ });
+ };
+
  window.changeQuestion = function(step) {
  if(!allQuestionsData.length) return;
  questionViewerIndex = (questionViewerIndex + step + allQuestionsData.length) % allQuestionsData.length;
  renderQuestionViewer();
  const pocket = document.getElementById('answerPocket');
- if(pocket) pocket.classList.remove('active');
+ if(pocket && pocket.classList.contains('active')) {
+ const domanda = allQuestionsData[questionViewerIndex];
+ const domandaId = domanda ? domanda.id : null;
+ window.caricaRisposteDomanda(domandaId);
+ }
  };
 
  window.toggleAnswerPocket = function() {
  const pocket = document.getElementById('answerPocket');
- if(pocket) pocket.classList.toggle('active');
+ if(!pocket) return;
+ pocket.classList.toggle('active');
+ if(pocket.classList.contains('active')) {
+ const domanda = allQuestionsData[questionViewerIndex];
+ const domandaId = domanda ? domanda.id : null;
+ window.caricaRisposteDomanda(domandaId);
+ }
  };
 
- window.submitQuestionAnswer = function() {
+ window.submitQuestionAnswer = async function() {
  const answer = document.getElementById('questionAnswerText');
  if(!answer || !answer.value.trim()) return alert('Scrivi una risposta prima di inviarla.');
+ const testo = answer.value.trim();
+ const domanda = allQuestionsData[questionViewerIndex];
+ const domandaId = domanda ? domanda.id : null;
+ if(!domandaId) return alert('Impossibile inviare la risposta per questa domanda.');
+ if(!db) return alert('Connessione a Supabase non disponibile.');
+
+ const { error } = await db.from('risposte_domande').insert({ domanda_id: domandaId, testo: testo });
+ if(error) return alert("Errore nell'invio della risposta.");
+
  answer.value = '';
- alert('Risposta salvata come bozza.');
+ await window.caricaRisposteDomanda(domandaId);
  };
 
  window.caricaDomande = async function() {
@@ -1992,7 +2046,7 @@
 
  window.caricaArchivioVotazioni = async function() {
  if(!db) return;
- const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false });
+ const { data, error } = await db.from('archivio_votazioni').select('*');
  if(error) return;
 
  const container = document.getElementById('archivioVotazioniList');
@@ -2002,13 +2056,17 @@
  data.forEach(item => {
  const card = document.createElement('div');
  card.className = 'archive-vote-card';
+ const titolo = item.titolo || item.titolo_sessione || '';
+ const vincitore = item.vincitore || item.proposta_vincente || '';
+ const voti = item.voti ?? item.voti_ricevuti ?? 0;
+ const percentuale = item.percentuale ?? item.percentuale_vittoria ?? 0;
  card.innerHTML = `
  <div class="archive-vote-header">
- <h4>${escapeHTML(item.titolo)}</h4>
- <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span>
+ <h4>${escapeHTML(titolo)}</h4>
+ <span class="archive-winner-badge">Vinto: ${escapeHTML(vincitore)}</span>
  </div>
  <div class="archive-vote-details">
- Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong>
+ Voti totali: <strong>${voti}</strong> | Percentuale: <strong>${percentuale}%</strong>
  </div>
  `;
  container.appendChild(card);
@@ -2023,6 +2081,14 @@
  .on('postgres_changes', { event: '*', schema: 'public', table: 'archivio_appunti' }, () => window.caricaArchivioAppunti())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => caricaLikePost())
  .on('postgres_changes', { event: '*', schema: 'public', table: 'voti_proposte' }, () => window.caricaVotazioniEGrafico())
+ .on('postgres_changes', { event: '*', schema: 'public', table: 'risposte_domande' }, () => {
+ const pocket = document.getElementById('answerPocket');
+ if(pocket && pocket.classList.contains('active')) {
+ const domanda = allQuestionsData[questionViewerIndex];
+ const domandaId = domanda ? domanda.id : null;
+ window.caricaRisposteDomanda(domandaId);
+ }
+ })
  .subscribe();
  }
 
@@ -2052,4 +2118,4 @@
  </script>
 
 </body>
-</html> 
+</html>
