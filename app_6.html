@@ -2046,7 +2046,7 @@
 
  window.caricaArchivioVotazioni = async function() {
  if(!db) return;
- const { data, error } = await db.from('archivio_votazioni').select('*').order('creato_il', { ascending: false });
+ const { data, error } = await db.from('archivio_votazioni').select('*');
  if(error) return;
 
  const container = document.getElementById('archivioVotazioniList');
@@ -2056,13 +2056,17 @@
  data.forEach(item => {
  const card = document.createElement('div');
  card.className = 'archive-vote-card';
+ const titolo = item.titolo || item.titolo_sessione || '';
+ const vincitore = item.vincitore || item.proposta_vincente || '';
+ const voti = item.voti ?? item.voti_ricevuti ?? 0;
+ const percentuale = item.percentuale ?? item.percentuale_vittoria ?? 0;
  card.innerHTML = `
  <div class="archive-vote-header">
- <h4>${escapeHTML(item.titolo)}</h4>
- <span class="archive-winner-badge">Vinto: ${escapeHTML(item.vincitore)}</span>
+ <h4>${escapeHTML(titolo)}</h4>
+ <span class="archive-winner-badge">Vinto: ${escapeHTML(vincitore)}</span>
  </div>
  <div class="archive-vote-details">
- Voti totali: <strong>${item.voti}</strong> | Percentuale: <strong>${item.percentuale}%</strong>
+ Voti totali: <strong>${voti}</strong> | Percentuale: <strong>${percentuale}%</strong>
  </div>
  `;
  container.appendChild(card);
