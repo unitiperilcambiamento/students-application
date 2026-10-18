@@ -233,6 +233,7 @@
  .calendar-day.empty { pointer-events: none; }
  .calendar-day.has-event { background-color: #f0fdf4; color: #166534; font-weight: 700; }
  .calendar-day.has-event::after { content: ''; width: 5px; height: 5px; background: #22c55e; border-radius: 50%; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); }
+ .calendar-day.today { background-color: rgba(147, 197, 253, 0.35) !important; color: #0f2d59 !important; font-weight: 700; border: 1px solid var(--accent-light); }
  .calendar-day.selected { background-color: var(--accent-color) !important; color: #ffffff !important; }
  .calendar-day.selected::after { background: #ffffff; }
 
@@ -504,20 +505,19 @@
 
  <!-- POST DEI RAPPRESENTANTI (Senza vedi tutto) -->
  <section class="section-container">
- <h2 class="section-title-margin">Post dei candidati Rappresentanti</h2>
+ <h2 class="section-title-margin">Post dei Rappresentanti</h2>
  <div class="posts-scroll-container">
-  
  <div class="post-card">
  <div class="post-author-strip">
  <div class="author-info">
  <h3 class="author-name">Karem Khemiri</h3>
- <span class="author-role">Candidato Rappresentante d'Istituto</span>
+ <span class="author-role">Rappresentante d'Istituto</span>
  </div>
- <span class="post-date" data-timestamp="2026-09-20T11:45:00">12:30</span>
+ <span class="post-date" data-timestamp="2026-10-04T11:45:00">12:30</span>
  </div>
  <div class="post-content">
-<p>Ciao a tutti! Potete consultare l'orario attuale <a href="//cspace.spaggiari.eu/pub/MNII0003/Orario/index.html">cliccando qui</a>. Vi segnaliamo che ci è stato comunicato che questo orario è ancora provvisorio.</p> 
-</div>
+ <p>Ciao a tutti! Vi ricordo che venerdì alle 11 ci sarà l'assemblea studentesca generale in aula magna per raccogliere idee sulle proposte del prossimo trimestre. Passate parola!</p>
+ </div>
  <div class="post-actions-bar">
  <button class="action-btn like-btn" data-post-id="1" data-default-likes="0" onclick="toggleLike(this)">
  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.5 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -525,17 +525,16 @@
  </button>
  </div>
  </div>
-  
-  <div class="post-card">
+ <div class="post-card">
  <div class="post-author-strip">
  <div class="author-info">
- <h3 class="author-name">Marco Bianchi</h3>
+ <h3 class="author-name">Karem Khemiri</h3>
  <span class="author-role">Rappresentante d'Istituto</span>
  </div>
- <span class="post-date" data-timestamp="2026-07-01T09:00:00">Ieri</span>
+ <span class="post-date" data-timestamp="2026-10-03T09:00:00">Ieri</span>
  </div>
  <div class="post-content">
- <p>Grandi ragazzi! Abbiamo appena chiuso l'accordo per rinnovare le convenzioni con i principali punti di ristoro vicino alla scuola. Trovate i dettagli subito sotto nelle collaborazioni!</p>
+ <p>Benvenuti a tutti ragazzi sulla nuova applicazione della lista 1, Instant Change, come potrete vedere questa applicazione è piena di nuove novità...</p>
  </div>
  <div class="post-actions-bar">
  <button class="action-btn like-btn" data-post-id="2" data-default-likes="0" onclick="toggleLike(this)">
@@ -796,45 +795,27 @@
 
  <!-- ================= VISTA 2: OBIETTIVI (PROGRAMMA) ================= -->
  <div id="view-obiettivi" class="app-view">
- <div class="view-title-banner">Programma Elettorale e Candidati</div>
+ <div class="view-title-banner">Programma Elettorale</div>
  <div class="section-container">
 
  <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">FR</div>
- <div class="candidate-meta">
- <h3>Federico Rossi</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 1: Wi-Fi Stabile.</strong> Potenziare la stabilità della rete Wi-Fi in tutte le aule e digitalizzare la burocrazia per le richieste studentesche.
+ <div class="candidate-goal-box" style="border-left: 4px solid var(--accent-color); padding: 12px 14px; border-radius: 12px;">
+ <h3 style="font-size: 15.5px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Obiettivo 1</h3>
+ <strong>Wi-Fi Stabile.</strong> Potenziare la stabilità della rete Wi-Fi in tutte le aule e digitalizzare la burocrazia per le richieste studentesche.
  </div>
  </div>
 
  <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">MB</div>
- <div class="candidate-meta">
- <h3>Marco Bianchi</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 2: Più Convenzioni.</strong> Ampliare la rete dei negozi partner e delle librerie della zona per offrire sconti reali tramite l'app della lista.
+ <div class="candidate-goal-box" style="border-left: 4px solid var(--accent-color); padding: 12px 14px; border-radius: 12px;">
+ <h3 style="font-size: 15.5px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Obiettivo 2</h3>
+ <strong>Più Convenzioni.</strong> Ampliare la rete dei negozi partner e delle librerie della zona per offrire sconti reali tramite l'app della lista.
  </div>
  </div>
 
  <div class="candidate-card">
- <div class="candidate-header">
- <div class="candidate-avatar-placeholder">SG</div>
- <div class="candidate-meta">
- <h3>Sofia Galli</h3>
- <span>Candidato Rappresentante d'Istituto</span>
- </div>
- </div>
- <div class="candidate-goal-box">
- <strong>Obiettivo 3: Assemblee Interattive.</strong> Introdurre sistemi di dibattito a votazione istantanea digitale e ospitare esperti esterni scelti direttamente da voi.
+ <div class="candidate-goal-box" style="border-left: 4px solid var(--accent-color); padding: 12px 14px; border-radius: 12px;">
+ <h3 style="font-size: 15.5px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Obiettivo 3</h3>
+ <strong>Assemblee Interattive.</strong> Introdurre sistemi di dibattito a votazione istantanea digitale e ospitare esperti esterni scelti direttamente da voi.
  </div>
  </div>
 
@@ -1164,7 +1145,7 @@
  }
 
  // 6. MOTORE CALENDARIO DINAMICO REALE SULLE ASSEMBLEE
- let currentDate = new Date(2026, 5, 1); // Giugno 2026
+ let currentDate = new Date();
 
  const eventsDatabase = {
  "2026-06-05": [{ title: "Assemblea Straordinaria Digitale", time: "Ore 10:00", loc: "Online via App" }],
@@ -1207,11 +1188,17 @@
  }
 
  const daysInMonth = new Date(year, month + 1, 0).getDate();
+ const realToday = new Date();
+ const isCurrentMonth = realToday.getFullYear() === year && realToday.getMonth() === month;
 
  for (let day = 1; day <= daysInMonth; day++) {
  const dayCell = document.createElement('div');
  dayCell.className = 'calendar-day';
  dayCell.textContent = day;
+
+ if (isCurrentMonth && day === realToday.getDate()) {
+ dayCell.classList.add('today');
+ }
 
  const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
