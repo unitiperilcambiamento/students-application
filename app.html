@@ -1446,7 +1446,7 @@
  counter.textContent = 'Domanda ' + (questionViewerIndex + 1) + ' di ' + allQuestionsData.length;
  }
 
- window.caricaRisposteDomanda = async function(domandaId) {
+ async function caricaRisposteDomanda(domandaId) {
  const container = document.getElementById('commentsList');
  if(!container) return;
  container.innerHTML = '';
@@ -1478,9 +1478,10 @@
  div.textContent = risposta.testo || '';
  container.appendChild(div);
  });
- };
+ }
+ window.caricaRisposteDomanda = caricaRisposteDomanda;
 
- window.changeQuestion = function(step) {
+ function changeQuestion(step) {
  if(!allQuestionsData.length) return;
  questionViewerIndex = (questionViewerIndex + step + allQuestionsData.length) % allQuestionsData.length;
  renderQuestionViewer();
@@ -1488,22 +1489,24 @@
  if(pocket && pocket.classList.contains('active')) {
  const domanda = allQuestionsData[questionViewerIndex];
  const domandaId = domanda ? domanda.id : null;
- window.caricaRisposteDomanda(domandaId);
+ caricaRisposteDomanda(domandaId);
  }
- };
+ }
+ window.changeQuestion = changeQuestion;
 
- window.toggleAnswerPocket = function() {
+ function toggleAnswerPocket() {
  const pocket = document.getElementById('answerPocket');
  if(!pocket) return;
  pocket.classList.toggle('active');
  if(pocket.classList.contains('active')) {
  const domanda = allQuestionsData[questionViewerIndex];
  const domandaId = domanda ? domanda.id : null;
- window.caricaRisposteDomanda(domandaId);
+ caricaRisposteDomanda(domandaId);
  }
- };
+ }
+ window.toggleAnswerPocket = toggleAnswerPocket;
 
- window.submitQuestionAnswer = async function() {
+ async function submitQuestionAnswer() {
  const answer = document.getElementById('questionAnswerText');
  if(!answer || !answer.value.trim()) return alert('Scrivi una risposta prima di inviarla.');
  const testo = answer.value.trim();
@@ -1516,8 +1519,9 @@
  if(error) return alert("Errore nell'invio della risposta.");
 
  answer.value = '';
- await window.caricaRisposteDomanda(domandaId);
- };
+ await caricaRisposteDomanda(domandaId);
+ }
+ window.submitQuestionAnswer = submitQuestionAnswer;
 
  window.caricaDomande = async function() {
  if(!db) {
